@@ -128,36 +128,66 @@ export default function Home() {
 
   return (
     <div className="mk">
-      <header className="mk-band">
-        <div className="mk-band-in">
-          <div className="mk-logo"><img src="/kame-pen.png" alt="まるかめ" /></div>
-          <div className="mk-title">
-            まるかめ ESレビューシート
-            <small>MARUKAME ES REVIEW SHEET</small>
+      {user && (
+        <header className="mk-band">
+          <div className="mk-band-in">
+            <div className="mk-logo"><img src="/kame-pen.png" alt="まるかめ" /></div>
+            <div className="mk-title">
+              まるかめ ESレビューシート
+              <small>MARUKAME ES REVIEW SHEET</small>
+            </div>
+            {credits !== null && (
+              <div className="mk-cred">のこり {credits} 回</div>
+            )}
           </div>
-          {user && credits !== null && (
-            <div className="mk-cred">のこり {credits} 回</div>
-          )}
-        </div>
-      </header>
+        </header>
+      )}
 
       <div className="mk-wrap">
-        {/* ---- 未ログイン ---- */}
+        {/* ---- 未ログイン(オンボーディング) ---- */}
         {authReady && !user && (
-          <div className="mk-card" style={{ textAlign: "center", padding: "36px 24px" }}>
-            <img src="/kame-pen.png" alt="まるかめ" className="mk-hero" />
-            <p style={{ fontWeight: 900, fontSize: 17, marginBottom: 6 }}>
-              あなたのESを、まるかめが添削するよ
-            </p>
-            <p style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.9, marginBottom: 20 }}>
-              良いところはちゃんと褒めて、気になるところは
-              <br />「なぜ読み手が引っかかるか」まで具体的に。
-              <br />初回は<b style={{ color: "var(--matcha-deep)" }}>1回無料</b>で試せます
-            </p>
-            <button className="mk-google" onClick={loginGoogle}>
-              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 34.9 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-              Googleでログインしてはじめる
-            </button>
+          <div className="onb">
+            <div className="onb-top">
+              <div className="onb-icon onb-in" style={{ animationDelay: "0ms" }}>
+                <img src="/kame-pen.png" alt="まるかめ" />
+              </div>
+              <p className="onb-eyebrow onb-in" style={{ animationDelay: "80ms" }}>まるかめ ESレビューシート</p>
+              <h1 className="onb-title onb-in" style={{ animationDelay: "160ms" }}>
+                あなたのESに、<br />まるかめの赤ペンを。
+              </h1>
+            </div>
+
+            <div className="onb-features">
+              <div className="onb-row onb-in" style={{ animationDelay: "260ms" }}>
+                <span className="onb-emoji">💮</span>
+                <div>
+                  <b>良いところを、ちゃんと褒める</b>
+                  <p>まず伝わっている魅力から教えてくれる</p>
+                </div>
+              </div>
+              <div className="onb-row onb-in" style={{ animationDelay: "340ms" }}>
+                <span className="onb-emoji">🔎</span>
+                <div>
+                  <b>気になる点は「なぜ」まで具体的に</b>
+                  <p>読み手がどこで引っかかるかが分かる</p>
+                </div>
+              </div>
+              <div className="onb-row onb-in" style={{ animationDelay: "420ms" }}>
+                <span className="onb-emoji">✍️</span>
+                <div>
+                  <b>まるかめが書いた修正版つき</b>
+                  <p>あなたのエピソードのまま、伝わる形に</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="onb-bottom onb-in" style={{ animationDelay: "520ms" }}>
+              <button className="onb-cta" onClick={loginGoogle}>
+                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 34.9 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+                Googleではじめる
+              </button>
+              <p className="onb-note">初回は1回無料 · 登録は30秒</p>
+            </div>
           </div>
         )}
 
