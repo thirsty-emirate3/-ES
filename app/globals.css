@@ -12,7 +12,13 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .mk-band::before{content:'✿'; position:absolute; left:5%; top:8px; color:#DCE8C8; font-size:24px;}
 .mk-band::after{content:'♡'; position:absolute; right:6%; bottom:10px; color:#F6C9BE; font-size:18px;}
 .mk-band-in{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:12px;}
-.mk-logo{width:50px; height:50px; border-radius:50%; background:#FFFDF4; display:flex; align-items:center; justify-content:center; font-size:27px; box-shadow:0 3px 0 #E8D89E; flex-shrink:0;}
+.mk-logo{width:50px; height:50px; border-radius:50%; background:#FFFDF4; display:flex; align-items:center; justify-content:center; overflow:hidden; box-shadow:0 3px 0 #E8D89E; flex-shrink:0;}
+.mk-logo img{width:42px; height:42px; object-fit:contain;}
+.mk-hero{width:130px; height:130px; object-fit:contain; margin-bottom:10px;}
+.mk-loading-img{width:110px; height:110px; object-fit:contain; display:inline-block; animation:bob 1.8s ease-in-out infinite;}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.5deg);}50%{transform:translateY(-7px) rotate(1.5deg);}}
+@media(prefers-reduced-motion:reduce){.mk-loading-img{animation:none;}}
+.mk-state-img{width:96px; height:96px; object-fit:contain;}
 .mk-title{font-size:clamp(19px,5vw,27px); font-weight:900; letter-spacing:.04em;}
 .mk-title small{display:block; font-size:11px; font-weight:700; color:var(--ink-soft); letter-spacing:.16em; margin-top:2px;}
 .mk-cred{margin-left:auto; background:#FFFDF4; border:2px solid var(--line); border-radius:999px; padding:6px 14px; font-size:12px; font-weight:900; white-space:nowrap;}

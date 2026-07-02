@@ -130,7 +130,7 @@ export default function Home() {
     <div className="mk">
       <header className="mk-band">
         <div className="mk-band-in">
-          <div className="mk-logo">🐢</div>
+          <div className="mk-logo"><img src="/kame-pen.png" alt="まるかめ" /></div>
           <div className="mk-title">
             まるかめ ESレビューシート
             <small>MARUKAME ES REVIEW SHEET</small>
@@ -145,7 +145,7 @@ export default function Home() {
         {/* ---- 未ログイン ---- */}
         {authReady && !user && (
           <div className="mk-card" style={{ textAlign: "center", padding: "36px 24px" }}>
-            <div style={{ fontSize: 48, marginBottom: 10 }}>🐢</div>
+            <img src="/kame-pen.png" alt="まるかめ" className="mk-hero" />
             <p style={{ fontWeight: 900, fontSize: 17, marginBottom: 6 }}>
               あなたのESを、まるかめが添削するよ
             </p>
@@ -212,7 +212,7 @@ export default function Home() {
 
             {loading && (
               <div className="mk-card mk-load" style={{ marginTop: 18 }}>
-                <span className="t">🐢</span>
+                <img src="/kame-reading.png" alt="" className="mk-loading-img" />
                 <p>じっくり読んでいます…(30秒くらいかかるよ)</p>
               </div>
             )}
@@ -220,6 +220,7 @@ export default function Home() {
             {/* ---- 回数切れ → プラン表示 ---- */}
             {needPay && (
               <div className="mk-card" style={{ marginTop: 18, textAlign: "center" }}>
+                <img src="/kame-sorry.png" alt="" className="mk-state-img" />
                 <p style={{ fontWeight: 900, fontSize: 15 }}>無料分を使い切ったみたい🐢</p>
                 <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 4 }}>
                   続けて添削するにはプランを選んでね
@@ -244,6 +245,9 @@ export default function Home() {
             {/* ---- 結果 ---- */}
             {out && (
               <div className="mk-card" style={{ marginTop: 22 }}>
+                <div style={{ textAlign: "center", marginBottom: 6 }}>
+                  <img src="/kame-hanamaru.png" alt="添削完了" className="mk-state-img" />
+                </div>
                 <div className="mk-actions">
                   <button className="mk-btn" onClick={() => window.print()}>🖨 PDFで保存</button>
                 </div>
@@ -296,7 +300,7 @@ export default function Home() {
       {out && (
         <div className="mk-print">
           <div className="pr-band">
-            <span style={{ fontSize: 28 }}>🐢</span>
+            <img src="/kame-pen.png" alt="" style={{ width: 46, height: 46 }} />
             <div>
               <div className="t">まるかめ ESレビューシート</div>
               <div className="s">MARUKAME ES REVIEW SHEET</div>
