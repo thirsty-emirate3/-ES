@@ -13,6 +13,14 @@ const KANTEN = {
   "その他": "設問の意図に答えているか/具体性/論理のつながり/読みやすさ",
 };
 
+const AXES = {
+  "ガクチカ": ["課題の具体性", "主体性", "役割の明確さ", "チームの巻き込み", "行動→結果の納得感", "学びの深さ"],
+  "志望動機": ["原体験の強さ", "企業との接続", "学びの具体性", "職種理解", "熱意"],
+  "自己PR": ["強みの明確さ", "エピソードの裏付け", "再現性", "企業での活き方", "読みやすさ"],
+  "研究内容": ["分かりやすさ", "社会的意義", "用語のかみくだき", "自分の工夫", "企業での活かし方"],
+  "その他": ["設問への適合", "具体性", "論理のつながり", "読みやすさ", "独自性"],
+};
+
 const TONE = `口調ルール(重要):
 - まず良い点をしっかり褒め、その後に気になる点を具体的に指摘する
 - 「〜と思います」を連続させない。語尾を揃えすぎない
@@ -77,8 +85,10 @@ ${TONE}
 
 ${info}
 
+また、以下の評価軸それぞれを10点満点で採点すること(平均的な就活生のESを6点とし、甘すぎず辛すぎず): ${JSON.stringify(AXES[qtype] || AXES["その他"])}
+
 以下のJSONのみを出力(前置き・コードブロック禁止):
-{"zentai":"全体所感(まず褒める→気になった点に軽く触れる。3〜4文)","yokatta":[{"title":"短い見出し","body":"コメント"}],"kininatta":[{"title":"短い見出し","body":"なぜ読み手が引っかかるかまで書く"}],"mensetsu":["面接で深掘りされそうな質問を4つ"],"saigo":"前向きな締めの一言(🐢を添える)"}`,
+{"zentai":"全体所感(まず褒める→気になった点に軽く触れる。3〜4文)","yokatta":[{"title":"短い見出し","body":"コメント"}],"kininatta":[{"title":"短い見出し","body":"なぜ読み手が引っかかるかまで書く"}],"scores":[評価軸と同じ順の整数の配列],"mensetsu":["面接で深掘りされそうな質問を4つ"],"saigo":"前向きな締めの一言(🐢を添える)"}`,
       }],
     });
     const t1 = r1.content.filter((b) => b.type === "text").map((b) => b.text).join("");
@@ -112,7 +122,15 @@ ${info}`,
         .eq("id", user.id);
     }
 
-    return NextResponse.json({ ...comments, shuseiban, creditsLeft, isAdmin });
+    // 履歴に保存
+    const { data: saved } = await admin.from("reviews").insert({
+      user_id: user.id,
+      qtype, question, body,
+      tags: tags || [],
+      result: { ...comments, shuseiban },
+    }).select("id").single();
+
+    return NextResponse.json({ ...comments, shuseiban, creditsLeft, isAdmin, reviewId: saved?.id, axes: AXES[qtype] || AXES["その他"] });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "生成に失敗しました。もう一度お試しください。" }, { status: 500 });

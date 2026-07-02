@@ -24,3 +24,18 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- 添削履歴
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  qtype text,
+  question text,
+  body text,
+  tags text[],
+  result jsonb,
+  created_at timestamptz default now()
+);
+alter table public.reviews enable row level security;
+create policy "own reviews read" on public.reviews
+  for select using (auth.uid() = user_id);
