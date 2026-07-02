@@ -29,6 +29,11 @@ export async function POST(req) {
     return NextResponse.json({ error: "ログインが必要です" }, { status: 401 });
   }
 
+  // 管理者(開発用): ADMIN_EMAILSに登録されたメールは回数無制限
+  const adminEmails = (process.env.ADMIN_EMAILS || "")
+    .split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const isAdmin = adminEmails.includes((user.email || "").toLowerCase());
+
   // 残り回数チェック(service roleで確実に読む)
   const admin = createAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -37,7 +42,7 @@ export async function POST(req) {
   const { data: profile } = await admin
     .from("profiles").select("credits").eq("id", user.id).single();
 
-  if (!profile || profile.credits <= 0) {
+  if (!isAdmin && (!profile || profile.credits <= 0)) {
     return NextResponse.json({ error: "no_credits" }, { status: 402 });
   }
 
@@ -98,12 +103,16 @@ ${info}`,
     });
     const shuseiban = r2.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
 
-    // 成功時のみ1回消費
-    await admin.from("profiles")
-      .update({ credits: profile.credits - 1 })
-      .eq("id", user.id);
+    // 成功時のみ1回消費(管理者は消費しない)
+    let creditsLeft = profile ? profile.credits : 0;
+    if (!isAdmin) {
+      creditsLeft = profile.credits - 1;
+      await admin.from("profiles")
+        .update({ credits: creditsLeft })
+        .eq("id", user.id);
+    }
 
-    return NextResponse.json({ ...comments, shuseiban, creditsLeft: profile.credits - 1 });
+    return NextResponse.json({ ...comments, shuseiban, creditsLeft, isAdmin });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "生成に失敗しました。もう一度お試しください。" }, { status: 500 });
