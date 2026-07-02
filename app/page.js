@@ -109,6 +109,7 @@ function ResultView({ data, onPrint }) {
           </div>
         )}
         {scores && <Radar labels={labels} values={scores} />}
+        {scores && <p className="sh-score-note">スコアはまるかめの読みごたえのめやす。±1点くらいは揺れるよ</p>}
       </div>
 
       {/* セクションジャンプ */}
