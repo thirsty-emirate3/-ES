@@ -199,3 +199,53 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .hist-avg{font-size:19px; font-weight:900; color:var(--matcha-deep); white-space:nowrap;}
 .hist-avg small{font-size:10.5px; color:var(--ink-soft);}
 .hist-arrow{font-size:22px; color:var(--line); font-weight:900;}
+
+/* ---- 答案返却デザイン ---- */
+:root{--shu:#D9483B; --shu-soft:#F6DCD8;}
+.sh-sheet{position:relative; background:var(--card); border:2px solid var(--line); border-radius:20px;
+  box-shadow:0 4px 0 rgba(69,55,35,.06); padding:24px 20px; margin-bottom:16px;}
+.sh-hero{text-align:center; padding-top:30px;}
+.sh-stamp{position:absolute; top:16px; right:16px; writing-mode:vertical-rl;
+  color:var(--shu); border:2.5px solid var(--shu); border-radius:8px;
+  font-size:12.5px; font-weight:900; letter-spacing:.22em; padding:9px 5px;
+  transform:rotate(6deg); opacity:.8; user-select:none;}
+.sh-kame{width:100px; height:100px; object-fit:contain;}
+.sh-meta{font-size:11.5px; font-weight:700; letter-spacing:.12em; color:var(--ink-soft); margin-top:2px;}
+.sh-score{position:relative; display:inline-block; margin-top:10px; padding:14px 30px 12px;}
+.sh-circle{position:absolute; inset:0; width:100%; height:100%;}
+.sh-score-n{font-size:40px; font-weight:900; color:var(--shu); position:relative;}
+.sh-score small{font-size:14px; font-weight:900; color:var(--ink-soft); position:relative; margin-left:2px;}
+.sh-nav{position:sticky; top:10px; z-index:20; display:flex; gap:6px; overflow-x:auto;
+  background:rgba(255,251,236,.9); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  border:2px solid var(--line); border-radius:999px; padding:6px; margin-bottom:16px;
+  scrollbar-width:none;}
+.sh-nav::-webkit-scrollbar{display:none;}
+.sh-nav button{font-family:inherit; font-size:12px; font-weight:900; white-space:nowrap;
+  color:var(--ink-soft); background:none; border:none; cursor:pointer; border-radius:999px; padding:7px 13px;}
+.sh-nav button:hover{background:var(--band); color:var(--ink);}
+.sh-h{display:inline-block; font-size:16.5px; font-weight:900; margin-bottom:14px; padding-bottom:7px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='7' viewBox='0 0 22 7'%3E%3Cpath d='M1 4.5 Q 6.5 1 11 4.5 T 21 4.5' fill='none' stroke='%23D9483B' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x left bottom;}
+.sh-body{font-size:14.5px; line-height:2.1; white-space:pre-wrap;}
+.sh-item{display:flex; gap:12px; padding:13px 4px; border-bottom:2px dashed var(--line);}
+.sh-item:last-child{border-bottom:none; padding-bottom:2px;}
+.sh-mark{width:38px; height:38px; flex-shrink:0; border-radius:12px; display:flex;
+  align-items:center; justify-content:center; font-size:17px;}
+.sh-mark.good{background:var(--matcha-pale);}
+.sh-mark.warn{background:var(--shu-soft);}
+.sh-item b{display:block; font-size:14px; font-weight:900; margin-bottom:4px; line-height:1.6;}
+.sh-item p{font-size:13.5px; line-height:1.95; color:var(--ink);}
+.sh-toggle{display:flex; background:#F3ECD6; border-radius:999px; padding:4px; margin-bottom:14px;}
+.sh-toggle button{flex:1; font-family:inherit; font-size:13px; font-weight:900; color:var(--ink-soft);
+  background:none; border:none; cursor:pointer; border-radius:999px; padding:9px 6px; transition:all .15s;}
+.sh-toggle button small{font-weight:700; font-size:10.5px; margin-left:3px;}
+.sh-toggle button.on{background:#FFFDF4; color:var(--ink); box-shadow:0 2px 6px rgba(69,55,35,.12);}
+.sh-paper{border:2px solid var(--line); border-radius:16px; padding:6px 18px;
+  background-color:#FFFEF8;
+  background-image:repeating-linear-gradient(transparent, transparent calc(2.15em - 1.5px), #EFE5C6 calc(2.15em - 1.5px), #EFE5C6 2.15em);}
+.sh-paper p{font-size:14.5px; line-height:2.15; white-space:pre-wrap; padding:0.55em 0;}
+.sh-paper.after{border-color:var(--honey);}
+.sh-tools{display:flex; align-items:center; gap:10px; margin-top:14px;}
+.sh-final{display:flex; align-items:flex-end; gap:10px; margin:22px 4px 18px;}
+.sh-final img{width:72px; height:72px; object-fit:contain; flex-shrink:0;}
+.sh-bubble{position:relative; background:#FFFDF4; border:2px solid var(--line); border-radius:18px;
+  border-bottom-left-radius:4px; padding:14px 16px; font-size:13.5px; font-weight:700; line-height:1.95;}

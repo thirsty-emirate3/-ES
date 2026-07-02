@@ -60,9 +60,19 @@ function Radar({ labels, values }) {
   );
 }
 
-/* ---- 添削結果(添削直後と履歴の両方で使う) ---- */
+/* ---- 添削結果 = まるかめ先生から返却された答案 ---- */
+const SECTIONS = [
+  { id: "sec-karte", label: "診断" },
+  { id: "sec-soukan", label: "所感" },
+  { id: "sec-good", label: "良い点" },
+  { id: "sec-warn", label: "気になる点" },
+  { id: "sec-rewrite", label: "修正版" },
+  { id: "sec-mensetsu", label: "面接" },
+];
+
 function ResultView({ data, onPrint }) {
   const [copied, setCopied] = useState("");
+  const [rewriteView, setRewriteView] = useState("after");
   const copy = async (text, key) => {
     try { await navigator.clipboard.writeText(text); }
     catch (_) {
@@ -72,72 +82,100 @@ function ResultView({ data, onPrint }) {
     }
     setCopied(key); setTimeout(() => setCopied(""), 1500);
   };
+  const jump = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+
   const labels = data.axes || AXES[data.qtype] || AXES["その他"];
   const scores = Array.isArray(data.scores) && data.scores.length === labels.length ? data.scores : null;
   const avg = scores ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null;
-  const shuLen = (data.shuseiban || "").replace(/\s/g, "").length;
+  const beforeLen = (data.body || "").replace(/\s/g, "").length;
+  const afterLen = (data.shuseiban || "").replace(/\s/g, "").length;
+  const showing = rewriteView === "after" ? data.shuseiban : data.body;
 
   return (
-    <div className="rv">
-      <div className="rv-hero">
-        <img src="/kame-hanamaru.png" alt="" className="rv-kame" />
-        <p className="rv-date">{data.qtype} · {data.date}</p>
+    <div className="sh">
+      {/* 表紙: 診断カルテ */}
+      <div className="sh-sheet sh-hero" id="sec-karte">
+        <div className="sh-stamp" aria-hidden="true">添削済</div>
+        <img src="/kame-hanamaru.png" alt="" className="sh-kame" />
+        <p className="sh-meta">{data.qtype} · {data.date}</p>
         {avg && (
-          <div className="rv-avg"><span>{avg}</span><small>/10</small></div>
+          <div className="sh-score">
+            <svg viewBox="0 0 120 74" className="sh-circle" aria-hidden="true">
+              <ellipse cx="60" cy="37" rx="52" ry="28" fill="none" stroke="var(--shu)" strokeWidth="3" strokeLinecap="round" transform="rotate(-3 60 37)" />
+              <ellipse cx="60" cy="37" rx="50" ry="26" fill="none" stroke="var(--shu)" strokeWidth="2" strokeLinecap="round" opacity=".45" transform="rotate(2 60 37)" />
+            </svg>
+            <span className="sh-score-n">{avg}</span>
+            <small>/10</small>
+          </div>
         )}
+        {scores && <Radar labels={labels} values={scores} />}
       </div>
-      {scores && <Radar labels={labels} values={scores} />}
 
-      <section className="rv-sec">
-        <h3 className="rv-h"><span>🌱</span>全体所感</h3>
-        <p className="rv-body">{data.zentai}</p>
-      </section>
+      {/* セクションジャンプ */}
+      <nav className="sh-nav">
+        {SECTIONS.map((sec) => (
+          <button key={sec.id} onClick={() => jump(sec.id)}>{sec.label}</button>
+        ))}
+      </nav>
 
-      <section className="rv-sec">
-        <h3 className="rv-h"><span>💮</span>良かった点</h3>
+      <div className="sh-sheet" id="sec-soukan">
+        <h3 className="sh-h">全体所感</h3>
+        <p className="sh-body">{data.zentai}</p>
+      </div>
+
+      <div className="sh-sheet" id="sec-good">
+        <h3 className="sh-h">良かった点</h3>
         {(data.yokatta || []).map((k, i) => (
-          <div className="rv-item good" key={i}>
-            <b>{k.title}</b>
-            <p>{k.body}</p>
+          <div className="sh-item" key={i}>
+            <span className="sh-mark good">💮</span>
+            <div><b>{k.title}</b><p>{k.body}</p></div>
           </div>
         ))}
-      </section>
+      </div>
 
-      <section className="rv-sec">
-        <h3 className="rv-h"><span>🔎</span>気になった点</h3>
+      <div className="sh-sheet" id="sec-warn">
+        <h3 className="sh-h">気になった点</h3>
         {(data.kininatta || []).map((k, i) => (
-          <div className="rv-item warn" key={i}>
-            <b>{k.title}</b>
-            <p>{k.body}</p>
+          <div className="sh-item" key={i}>
+            <span className="sh-mark warn">✍️</span>
+            <div><b>{k.title}</b><p>{k.body}</p></div>
           </div>
         ))}
-      </section>
+      </div>
 
-      <section className="rv-sec">
-        <h3 className="rv-h"><span>✍️</span>まるかめならこう書く</h3>
-        <div className="rv-rewrite">
-          <p>{data.shuseiban}</p>
-        </div>
-        <div className="rv-tools">
-          <button className="mk-btn primary" onClick={() => copy(data.shuseiban, "s")}>
-            {copied === "s" ? "✅ コピーした!" : "📋 修正版をコピー"}
+      <div className="sh-sheet" id="sec-rewrite">
+        <h3 className="sh-h">まるかめならこう書く</h3>
+        <div className="sh-toggle" role="tablist">
+          <button role="tab" className={rewriteView === "before" ? "on" : ""} onClick={() => setRewriteView("before")}>
+            原文 <small>{beforeLen}字</small>
           </button>
-          <span className="mk-chip">{shuLen}字</span>
+          <button role="tab" className={rewriteView === "after" ? "on" : ""} onClick={() => setRewriteView("after")}>
+            まるかめ版 <small>{afterLen}字</small>
+          </button>
         </div>
-      </section>
+        <div className={"sh-paper" + (rewriteView === "after" ? " after" : "")}>
+          <p>{showing}</p>
+        </div>
+        <div className="sh-tools">
+          <button className="mk-btn primary" onClick={() => copy(data.shuseiban, "s")}>
+            {copied === "s" ? "✅ コピーした!" : "📋 まるかめ版をコピー"}
+          </button>
+        </div>
+      </div>
 
-      <section className="rv-sec">
-        <h3 className="rv-h"><span>🎤</span>面接で聞かれそうなこと</h3>
+      <div className="sh-sheet" id="sec-mensetsu">
+        <h3 className="sh-h">面接で聞かれそうなこと</h3>
         <ol className="rv-qs">
           {(data.mensetsu || []).map((m, i) => <li key={i}>{m}</li>)}
         </ol>
-      </section>
+      </div>
 
-      <section className="rv-sec rv-last">
-        <p className="rv-body">{data.saigo}</p>
-      </section>
+      <div className="sh-final">
+        <img src="/kame-pen.png" alt="" />
+        <div className="sh-bubble">{data.saigo}</div>
+      </div>
 
-      <div className="rv-tools" style={{ justifyContent: "center" }}>
+      <div className="sh-tools" style={{ justifyContent: "center", marginTop: 4 }}>
         <button className="mk-btn" onClick={onPrint}>🖨 PDFで保存</button>
       </div>
     </div>
@@ -405,9 +443,7 @@ export default function Home() {
         {user && tab === "review" && out && (
           <>
             <button className="rv-back" onClick={() => setOut(null)}>← 新しく添削する</button>
-            <div className="mk-card rv-card">
-              <ResultView data={out} onPrint={() => window.print()} />
-            </div>
+            <ResultView data={out} onPrint={() => window.print()} />
           </>
         )}
 
@@ -448,9 +484,7 @@ export default function Home() {
         {user && tab === "history" && detail && (
           <>
             <button className="rv-back" onClick={() => setDetail(null)}>← きろく一覧へ</button>
-            <div className="mk-card rv-card">
-              <ResultView data={detail} onPrint={() => window.print()} />
-            </div>
+            <ResultView data={detail} onPrint={() => window.print()} />
           </>
         )}
       </div>
