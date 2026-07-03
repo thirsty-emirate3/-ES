@@ -250,3 +250,21 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .sh-bubble{position:relative; background:#FFFDF4; border:2px solid var(--line); border-radius:18px;
   border-bottom-left-radius:4px; padding:14px 16px; font-size:13.5px; font-weight:700; line-height:1.95;}
 .sh-score-note{font-size:11px; font-weight:700; color:var(--ink-soft); margin-top:2px;}
+
+/* ---- 法務ページ / エラーページ ---- */
+.legal{max-width:640px; margin:0 auto; padding:44px 22px 80px;}
+.legal h1{font-size:24px; font-weight:900; margin-bottom:22px;}
+.legal h2{font-size:15.5px; font-weight:900; margin:26px 0 8px;}
+.legal p{font-size:13.5px; line-height:2.0; color:var(--ink);}
+.legal a{color:var(--matcha-deep); font-weight:700;}
+.legal-date{color:var(--ink-soft); margin-top:30px; font-size:12px;}
+.legal-table{width:100%; border-collapse:collapse; font-size:13px; line-height:1.8;}
+.legal-table th,.legal-table td{border:2px solid var(--line); padding:10px 12px; text-align:left; vertical-align:top;}
+.legal-table th{background:var(--band); white-space:nowrap; font-weight:900; width:34%;}
+.oops{min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:10px; padding:24px;}
+.oops img{width:130px; height:130px; object-fit:contain;}
+.oops h1{font-size:19px; font-weight:900;}
+.oops p{font-size:13px; font-weight:700; color:var(--ink-soft); margin-bottom:10px;}
+.onb-legal{margin-top:14px; font-size:11px; font-weight:700; color:var(--ink-soft);}
+.onb-legal a{color:var(--ink-soft); text-decoration:underline; margin:0 5px;}

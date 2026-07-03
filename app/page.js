@@ -178,6 +178,18 @@ function ResultView({ data, onPrint }) {
 
       <div className="sh-tools" style={{ justifyContent: "center", marginTop: 4 }}>
         <button className="mk-btn" onClick={onPrint}>🖨 PDFで保存</button>
+        {avg && (
+          <a
+            className="mk-btn"
+            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+              `まるかめに${data.qtype}を添削してもらったら ${avg}/10 だった🐢\n#まるかめES添削\n`
+            )}&url=${encodeURIComponent("https://es-henna-three.vercel.app")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            🐦 スコアをシェア
+          </a>
+        )}
       </div>
     </div>
   );
@@ -365,6 +377,9 @@ export default function Home() {
                 Googleではじめる
               </button>
               <p className="onb-note">初回は1回無料 · 登録は30秒</p>
+              <p className="onb-legal">
+                はじめることで<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意したことになります
+              </p>
             </div>
           </div>
         )}
