@@ -76,6 +76,45 @@ function Radar({ labels, values }) {
   );
 }
 
+/* ---- 幹枝の概念図(描画アニメーション付き) ---- */
+function MikiEdaDiagram() {
+  return (
+    <svg viewBox="0 0 340 170" className="med" aria-label="幹枝テクニックの図">
+      <path className="med-line med-trunk" d="M28 85 H160" />
+      <path className="med-line med-b1" d="M160 85 C 210 85, 230 35, 292 30" />
+      <path className="med-line med-b2" d="M160 85 C 220 85, 240 85, 292 85" />
+      <path className="med-line med-b3" d="M160 85 C 210 85, 230 135, 292 140" />
+      <circle className="med-node med-n0" cx="28" cy="85" r="15" />
+      <text className="med-t med-t0" x="28" y="120" textAnchor="middle">あなたのES</text>
+      <circle className="med-node med-n1" cx="160" cy="85" r="12" />
+      <text className="med-t med-t1" x="160" y="62" textAnchor="middle">30秒の幹</text>
+      <circle className="med-leaf med-l1" cx="292" cy="30" r="8" />
+      <circle className="med-leaf med-l2" cx="292" cy="85" r="8" />
+      <circle className="med-leaf med-l3" cx="292" cy="140" r="8" />
+      <text className="med-t med-t2" x="310" y="34" textAnchor="start">なぜ?</text>
+      <text className="med-t med-t3" x="310" y="89" textAnchor="start">具体的には?</text>
+      <text className="med-t med-t4" x="310" y="144" textAnchor="start">反対は?</text>
+    </svg>
+  );
+}
+
+/* ---- スコアの円形ゲージ ---- */
+function ScoreRing({ value }) {
+  const r = 19, c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(10, parseFloat(value) || 0));
+  return (
+    <span className="ring">
+      <svg viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r={r} fill="none" stroke="#F0E9D4" strokeWidth="5" />
+        <circle cx="24" cy="24" r={r} fill="none" stroke="var(--matcha)" strokeWidth="5"
+          strokeLinecap="round" strokeDasharray={`${(v / 10) * c} ${c}`}
+          transform="rotate(-90 24 24)" />
+      </svg>
+      <b>{value}</b>
+    </span>
+  );
+}
+
 /* ---- ウィザード進捗: まるかめが道を歩く ---- */
 function StepProgress({ step, total }) {
   const pct = (step / (total - 1)) * 100;
@@ -482,6 +521,18 @@ export default function Home() {
 
   const activeResult = detail || out;
 
+  const [histFilter, setHistFilter] = useState("all");
+  const histFiltered = history ? history.filter((r) => histFilter === "all" || r.kind === histFilter) : null;
+  const histGroups = [];
+  if (histFiltered) {
+    const m = new Map();
+    histFiltered.forEach((row) => {
+      const key = new Date(row.created_at).toLocaleDateString("ja-JP", { year: "numeric", month: "long" });
+      if (!m.has(key)) { m.set(key, []); histGroups.push([key, m.get(key)]); }
+      m.get(key).push(row);
+    });
+  }
+
   const reviewForm = (
     <>
       <StepProgress step={rStep} total={4} />
@@ -664,11 +715,13 @@ export default function Home() {
             <div className="wiz-step" key={"i" + iStep}>
               {iStep === 0 && (
                 <>
-                  <div className="mk-card tr-intro">
-                    <img src="/kame-reading.png" alt="" />
-                    <div>
-                      <b>幹枝(みきえだ)シート</b>
-                      <p>ESを貼ると、面接用の「30秒回答」と「深掘りの枝分かれ」に変換するよ。ESは通るのに面接で落ちる人のための機能🐢</p>
+                  <div className="med-hero">
+                    <p className="med-eyebrow">MIKI-EDA METHOD</p>
+                    <h2 className="med-title">幹枝シート</h2>
+                    <p className="med-sub">全部話すと、面接は負け。<br />幹だけ渡して、深掘りは枝で返す。</p>
+                    <MikiEdaDiagram />
+                    <div className="med-steps">
+                      <span>ESを貼る</span><i>→</i><span>30秒の幹</span><i>→</i><span>深掘りの枝</span>
                     </div>
                   </div>
                   <div className="mk-card">
@@ -741,33 +794,47 @@ export default function Home() {
         {user && tab === "history" && !detail && (
           <>
             <h2 className="hist-title">きろく</h2>
+            <div className="hist-filters">
+              {[["all", "すべて"], ["review", "添削"], ["interview", "面接"]].map(([k, l]) => (
+                <button key={k} className={histFilter === k ? "on" : ""} onClick={() => setHistFilter(k)}>{l}</button>
+              ))}
+            </div>
+
             {history === null && <p className="hist-empty">読み込み中…</p>}
-            {history && history.length === 0 && (
+            {histFiltered && histFiltered.length === 0 && (
               <div className="hist-zero">
                 <img src="/kame-reading.png" alt="" className="mk-state-img" />
-                <p>まだ添削のきろくがないよ。<br />最初のESを見せてね🐢</p>
+                <p>まだきろくがないよ。<br />最初のESを見せてね🐢</p>
                 <button className="mk-btn primary" onClick={() => setTab("review")}>添削してもらう</button>
               </div>
             )}
-            {history && history.map((row) => {
-              const sc = row.result?.scores;
-              const avg = Array.isArray(sc) && sc.length ? (sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1) : null;
-              const isInt = row.kind === "interview";
-              return (
-                <button key={row.kind + row.id} className="hist-item" onClick={() => setDetail(rowToData(row))}>
-                  <div className="hist-left">
-                    <span className="hist-qtype">
-                      {isInt ? "面接対策" : "添削"} · {row.qtype}
-                    </span>
-                    <span className="hist-q">{row.question || (isInt ? row.result?.ikkabun : "(設問未記入)") || ""}</span>
-                    <span className="hist-date">{new Date(row.created_at).toLocaleDateString("ja-JP")}</span>
-                  </div>
-                  {avg && <span className="hist-avg">{avg}<small>/10</small></span>}
-                  <span className="hist-arrow">›</span>
-                </button>
-              );
-            })}
-            <p style={{ textAlign: "center", marginTop: 28 }}>
+
+            {histGroups.map(([month, rows]) => (
+              <div key={month} className="hist-group">
+                <p className="hist-month">{month}</p>
+                {rows.map((row) => {
+                  const sc = row.result?.scores;
+                  const avg = Array.isArray(sc) && sc.length ? (sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1) : null;
+                  const isInt = row.kind === "interview";
+                  const d = new Date(row.created_at);
+                  return (
+                    <button key={row.kind + row.id} className="hist-item" onClick={() => setDetail(rowToData(row))}>
+                      {isInt
+                        ? <span className="hist-ic"><Icon name="mic" size={19} /></span>
+                        : (avg ? <ScoreRing value={avg} /> : <span className="hist-ic pen"><Icon name="pen" size={18} /></span>)}
+                      <div className="hist-left">
+                        <span className="hist-qtype">{row.qtype}<em>{isInt ? "面接" : "添削"}</em></span>
+                        <span className="hist-q">{row.question || (isInt ? row.result?.ikkabun : "") || "(設問未記入)"}</span>
+                      </div>
+                      <span className="hist-date2">{d.getMonth() + 1}/{d.getDate()}</span>
+                      <span className="hist-arrow">›</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
+
+            <p style={{ textAlign: "center", marginTop: 30 }}>
               <button className="mk-btn" onClick={logout}>ログアウト</button>
             </p>
           </>
