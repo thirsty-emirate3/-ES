@@ -60,6 +60,96 @@ function Radar({ labels, values }) {
   );
 }
 
+/* ---- 幹枝シート = NotebookLM風の展開ツリー ---- */
+function InterviewView({ data }) {
+  const [openKw, setOpenKw] = useState(() => new Set());
+  const [openQ, setOpenQ] = useState(() => new Set());
+  const [copied, setCopied] = useState("");
+  const toggle = (set, setFn, key) => {
+    const next = new Set(set);
+    next.has(key) ? next.delete(key) : next.add(key);
+    setFn(next);
+  };
+  const copy = async (text, key) => {
+    try { await navigator.clipboard.writeText(text); }
+    catch (_) {
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); document.body.removeChild(ta);
+    }
+    setCopied(key); setTimeout(() => setCopied(""), 1500);
+  };
+
+  return (
+    <div className="sh">
+      <div className="sh-sheet sh-hero">
+        <div className="sh-stamp" aria-hidden="true">面接対策</div>
+        <img src="/kame-pen.png" alt="" className="sh-kame" />
+        <p className="sh-meta">{data.qtype} · {data.date} · 幹枝シート</p>
+      </div>
+
+      <div className="sh-sheet">
+        <h3 className="sh-h">🌰 一文要約(最初に渡す地図)</h3>
+        <p className="tr-ikkabun">{data.ikkabun}</p>
+      </div>
+
+      <div className="sh-sheet">
+        <h3 className="sh-h">🌳 30秒回答(幹)</h3>
+        <div className="sh-paper after"><p>{data.kaito30}</p></div>
+        <div className="sh-tools">
+          <button className="mk-btn primary" onClick={() => copy(data.kaito30, "k")}>
+            {copied === "k" ? "✅ コピーした!" : "📋 30秒回答をコピー"}
+          </button>
+        </div>
+        <p className="tr-hint">全部話さない。ここで面接官に「聞きたい」と思わせるのが幹の役割🐢</p>
+      </div>
+
+      <div className="sh-sheet">
+        <h3 className="sh-h">🌿 深掘りの枝分かれ</h3>
+        <p className="tr-hint" style={{ marginBottom: 14 }}>キーワードをタップすると、面接官の想定質問と答え方がひらくよ</p>
+        <div className="tree">
+          {(data.miki || []).map((m, mi) => (
+            <div className="tr-branch" key={mi}>
+              <button className={"tr-kw" + (openKw.has(mi) ? " open" : "")} onClick={() => toggle(openKw, setOpenKw, mi)}>
+                <span className="tr-kw-dot" />
+                {m.kw}
+                <span className="tr-caret">{openKw.has(mi) ? "−" : "+"}</span>
+              </button>
+              {openKw.has(mi) && (
+                <div className="tr-edas">
+                  {(m.eda || []).map((e, ei) => {
+                    const qk = mi + "-" + ei;
+                    return (
+                      <div className="tr-eda" key={ei}>
+                        <button className={"tr-q" + (openQ.has(qk) ? " open" : "")} onClick={() => toggle(openQ, setOpenQ, qk)}>
+                          <span className="tr-q-badge">Q</span>{e.q}
+                        </button>
+                        {openQ.has(qk) && (
+                          <div className="tr-a">
+                            <p>{e.a}</p>
+                            {(e.why || []).map((w, wi) => (
+                              <p className="tr-why" key={wi}>{w}</p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="sh-final">
+        <img src="/kame-pen.png" alt="" />
+        <div className="sh-bubble">面接は暗記じゃなくて枝分かれの準備。どの枝を選ばれても大丈夫な状態にしておこうね🐢</div>
+      </div>
+    </div>
+  );
+}
+
 /* ---- 添削結果 = まるかめ先生から返却された答案 ---- */
 const SECTIONS = [
   { id: "sec-karte", label: "診断" },
@@ -218,6 +308,13 @@ export default function Home() {
   const [history, setHistory] = useState(null);
   const [detail, setDetail] = useState(null);
 
+  const [iQtype, setIQtype] = useState("ガクチカ");
+  const [iQuestion, setIQuestion] = useState("");
+  const [iBody, setIBody] = useState("");
+  const [iOut, setIOut] = useState(null);
+  const [iErr, setIErr] = useState("");
+  const [iNeedPay, setINeedPay] = useState(false);
+
   const bodyLen = body.replace(/\s/g, "").length;
   const allTags = [...TAG_SUGGEST, ...extraTags];
 
@@ -244,12 +341,17 @@ export default function Home() {
   };
 
   const loadHistory = async () => {
-    const { data } = await supabase
-      .from("reviews")
-      .select("id, qtype, question, created_at, result")
-      .order("created_at", { ascending: false })
-      .limit(30);
-    setHistory(data || []);
+    const [r, i] = await Promise.all([
+      supabase.from("reviews").select("id, qtype, question, body, created_at, result")
+        .order("created_at", { ascending: false }).limit(30),
+      supabase.from("interview_sheets").select("id, qtype, question, body, created_at, result")
+        .order("created_at", { ascending: false }).limit(30),
+    ]);
+    const merged = [
+      ...(r.data || []).map((row) => ({ ...row, kind: "review" })),
+      ...(i.data || []).map((row) => ({ ...row, kind: "interview" })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    setHistory(merged);
   };
 
   const loginGoogle = () =>
@@ -301,6 +403,31 @@ export default function Home() {
     }
   };
 
+  const generateInterview = async () => {
+    if (!iBody.trim()) { setIErr("ES本文を貼り付けてね🐢"); return; }
+    setIErr(""); setIOut(null); setINeedPay(false); setLoading(true);
+    setPhase("ESから幹をつくっています…");
+    const timer = setTimeout(() => setPhase("枝分かれを伸ばしています…"), 14000);
+    try {
+      const res = await fetch("/api/interview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qtype: iQtype, question: iQuestion, body: iBody }),
+      });
+      const data = await res.json();
+      if (res.status === 402 || data.error === "no_credits") { setINeedPay(true); return; }
+      if (!res.ok) throw new Error(data.error || "エラーが発生しました");
+      setIOut({ ...data, qtype: iQtype, date: new Date().toLocaleDateString("ja-JP") });
+      if (typeof data.creditsLeft === "number") setCredits(data.creditsLeft);
+      window.scrollTo({ top: 0 });
+    } catch (e) {
+      setIErr("生成に失敗しました🙇 もう一度試してみてください。(" + (e.message || e) + ")");
+    } finally {
+      clearTimeout(timer);
+      setLoading(false); setPhase("");
+    }
+  };
+
   const buy = async (plan) => {
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -313,6 +440,7 @@ export default function Home() {
 
   const rowToData = (row) => ({
     ...(row.result || {}),
+    kind: row.kind || "review",
     qtype: row.qtype, question: row.question, body: row.body,
     date: new Date(row.created_at).toLocaleDateString("ja-JP"),
   });
@@ -463,6 +591,69 @@ export default function Home() {
           </>
         )}
 
+        {/* ---- 面接タブ ---- */}
+        {user && tab === "interview" && !iOut && (
+          <>
+            <div className="mk-card tr-intro">
+              <img src="/kame-reading.png" alt="" />
+              <div>
+                <b>幹枝(みきえだ)シート</b>
+                <p>ESを貼ると、面接用の「30秒回答」と「深掘りの枝分かれ」に変換するよ。ESは通るのに面接で落ちる人のための機能🐢</p>
+              </div>
+            </div>
+
+            <div className="mk-card">
+              <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
+              <div className="mk-types">
+                {QTYPES.map((q) => (
+                  <button key={q.t} className={"mk-type " + (iQtype === q.t ? "on" : "")} onClick={() => setIQtype(q.t)}>
+                    <span className="e">{q.e}</span><span className="t">{q.t}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mk-card">
+              <div className="mk-step"><span className="n">2</span>ES本文を貼ってね</div>
+              <div className="mk-hint">添削済みでも、書いたままでもOK。これを面接用に組み替えるよ</div>
+              <textarea className="mk-textarea" style={{ minHeight: 190 }} value={iBody}
+                onChange={(e) => setIBody(e.target.value)} placeholder="面接対策したいESをペタッと🐢" />
+            </div>
+
+            <button className="mk-go" onClick={generateInterview} disabled={loading}>🎤 幹枝シートをつくる</button>
+            {iErr && <div className="mk-err">{iErr}</div>}
+
+            {iNeedPay && (
+              <div className="mk-card" style={{ marginTop: 18, textAlign: "center" }}>
+                <img src="/kame-sorry.png" alt="" className="mk-state-img" />
+                <p style={{ fontWeight: 900, fontSize: 15 }}>無料分を使い切ったみたい🐢</p>
+                <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 4 }}>続けるにはプランを選んでね</p>
+                <div className="mk-plans">
+                  <div className="mk-plan">
+                    <div className="p-name">🍡 3回パック</div>
+                    <div className="p-price">¥500</div>
+                    <div className="p-note">ES提出前の駆け込みに</div>
+                    <button className="mk-btn primary" onClick={() => buy("pack")}>これにする</button>
+                  </div>
+                  <div className="mk-plan">
+                    <div className="p-name">🐢 月額プラン(10回/月)</div>
+                    <div className="p-price">¥980<span style={{ fontSize: 12 }}>/月</span></div>
+                    <div className="p-note">選考ラッシュ期はこっちがお得</div>
+                    <button className="mk-btn primary" onClick={() => buy("monthly")}>これにする</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {user && tab === "interview" && iOut && (
+          <>
+            <button className="rv-back" onClick={() => setIOut(null)}>← 新しくつくる</button>
+            <InterviewView data={iOut} />
+          </>
+        )}
+
         {/* ---- 履歴タブ ---- */}
         {user && tab === "history" && !detail && (
           <>
@@ -478,11 +669,14 @@ export default function Home() {
             {history && history.map((row) => {
               const sc = row.result?.scores;
               const avg = Array.isArray(sc) && sc.length ? (sc.reduce((a, b) => a + b, 0) / sc.length).toFixed(1) : null;
+              const isInt = row.kind === "interview";
               return (
-                <button key={row.id} className="hist-item" onClick={() => setDetail(rowToData(row))}>
+                <button key={row.kind + row.id} className="hist-item" onClick={() => setDetail(rowToData(row))}>
                   <div className="hist-left">
-                    <span className="hist-qtype">{QTYPES.find((q) => q.t === row.qtype)?.e || "📄"} {row.qtype}</span>
-                    <span className="hist-q">{row.question || "(設問未記入)"}</span>
+                    <span className="hist-qtype">
+                      {isInt ? "🎤 面接対策" : `${QTYPES.find((q) => q.t === row.qtype)?.e || "📄"} 添削`} · {row.qtype}
+                    </span>
+                    <span className="hist-q">{row.question || (isInt ? row.result?.ikkabun : "(設問未記入)") || ""}</span>
                     <span className="hist-date">{new Date(row.created_at).toLocaleDateString("ja-JP")}</span>
                   </div>
                   {avg && <span className="hist-avg">{avg}<small>/10</small></span>}
@@ -500,7 +694,9 @@ export default function Home() {
         {user && tab === "history" && detail && (
           <>
             <button className="rv-back" onClick={() => setDetail(null)}>← きろく一覧へ</button>
-            <ResultView data={detail} onPrint={() => window.print()} />
+            {detail.kind === "interview"
+              ? <InterviewView data={detail} />
+              : <ResultView data={detail} onPrint={() => window.print()} />}
           </>
         )}
       </div>
@@ -510,6 +706,9 @@ export default function Home() {
         <nav className="tabbar">
           <button className={tab === "review" ? "on" : ""} onClick={() => { setTab("review"); setDetail(null); }}>
             <span className="tb-ico">✍️</span>添削
+          </button>
+          <button className={tab === "interview" ? "on" : ""} onClick={() => { setTab("interview"); setDetail(null); }}>
+            <span className="tb-ico">🎤</span>面接
           </button>
           <button className={tab === "history" ? "on" : ""} onClick={() => { setTab("history"); }}>
             <span className="tb-ico">📚</span>きろく

@@ -39,3 +39,17 @@ create table if not exists public.reviews (
 alter table public.reviews enable row level security;
 create policy "own reviews read" on public.reviews
   for select using (auth.uid() = user_id);
+
+-- 面接対策(幹枝シート)
+create table if not exists public.interview_sheets (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  qtype text,
+  question text,
+  body text,
+  result jsonb,
+  created_at timestamptz default now()
+);
+alter table public.interview_sheets enable row level security;
+create policy "own sheets read" on public.interview_sheets
+  for select using (auth.uid() = user_id);
