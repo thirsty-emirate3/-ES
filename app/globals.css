@@ -584,3 +584,37 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
   .radar-dot{opacity:1;}
   .sh-circle ellipse{stroke-dashoffset:0;}
 }
+
+/* ---- ローディング: 進捗バー+豆知識 ---- */
+.ls-bar{width:min(300px,72vw); height:8px; border-radius:999px; background:#EFE8D2; margin-top:20px; overflow:hidden;}
+.ls-fill{height:100%; border-radius:999px; background:linear-gradient(90deg,var(--honey),var(--matcha)); transition:width .25s linear;}
+.ls-tip{margin-top:30px; max-width:330px; background:#fff; border-radius:20px; padding:16px 18px;
+  box-shadow:0 1px 3px rgba(69,55,35,.06), 0 18px 40px -28px rgba(69,55,35,.35);
+  animation:tipIn .45s ease;}
+@keyframes tipIn{from{opacity:0; transform:translateY(10px);}to{opacity:1; transform:none;}}
+.ls-tip b{display:block; font-size:10.5px; font-weight:900; letter-spacing:.2em; color:var(--matcha-deep); margin-bottom:6px;}
+.ls-tip p{font-size:13px; font-weight:700; line-height:1.95; text-align:left; color:var(--ink);}
+@media(prefers-reduced-motion:reduce){.ls-tip{animation:none;}}
+
+/* ---- 結果画面の情報階層 v2: 見出しで拾える構造 ---- */
+.sh-h2{display:flex; flex-direction:column; gap:4px; margin-bottom:16px; font-size:19px; font-weight:900; letter-spacing:.01em;}
+.sh-h2 em{font-style:normal; font-size:10px; font-weight:900; letter-spacing:.26em; color:#BFB294;}
+.sec-good .sh-h2 em{color:var(--matcha-deep);}
+.sec-warn .sh-h2 em{color:var(--shu);}
+.sec-rewrite .sh-h2 em{color:#C79A1F;}
+.sec-good{border-top:4px solid var(--matcha);}
+.sec-warn{border-top:4px solid var(--shu);}
+.sec-rewrite{border-top:4px solid var(--honey);}
+
+/* 所感は「読ませる一段落」として大きく */
+.sh-lead{font-size:15px; font-weight:700; line-height:2.1; white-space:pre-wrap;}
+
+/* 項目: タイトルを主役に、本文は控えめに */
+.sh-item b{font-size:15px; line-height:1.65; margin-bottom:5px;}
+.sec-good .sh-item b{color:var(--matcha-deep);}
+.sec-warn .sh-item b{color:var(--shu);}
+.sh-item p{font-size:12.5px; line-height:1.9; color:#75664B;}
+.sh-item{padding:15px 4px;}
+
+/* 面接質問も拾い読みしやすく */
+.rv-qs li{font-weight:700; font-size:13px;}

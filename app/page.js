@@ -10,6 +10,17 @@ const IC = {
   heart: <path d="M19.5 13.6 12 21l-7.5-7.4A5.2 5.2 0 1 1 12 6.4a5.2 5.2 0 1 1 7.5 7.2z" />,
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
 };
+const TIPS = [
+  "ガクチカは全部話すと逆効果。面接では「幹」だけ渡して、深掘りは「枝」で返すのがコツ🐢",
+  "一文で説明できないエピソードは、面接でも話が散らばりやすい。まずは一文要約から",
+  "「なぜ?」を3回重ねると、行動の説明が「考え方」に変わる。面接官が見ているのはそこ",
+  "学びが「粘り強さ」だけだと少しもったいない。仕事でどう再現できるかまで言えると強い",
+  "志望動機は「企業名を変えても通じる文章」になっていないかチェック。原体験と企業の接続が命",
+  "数字は魔法。「頑張った」より「180秒→120秒」のほうが100倍伝わる",
+  "課題→施策→結果のつながりに飛びがないか、声に出して読むと気づけるよ",
+  "ESの設問には必ず意図がある。「何を確かめたい質問か」から逆算して書こう",
+];
+
 const CONF = ["#F3C64F", "#EF9086", "#7FAE6B", "#8FC1E3", "#E7A6C7"];
 
 function useReveal(ref) {
@@ -178,12 +189,12 @@ function InterviewView({ data }) {
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">一文要約 — 最初に渡す地図</h3>
+        <h3 className="sh-h2"><em>MIKIEDA 01</em>一文要約 — 最初に渡す地図</h3>
         <p className="tr-ikkabun">{data.ikkabun}</p>
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">30秒回答 — 幹</h3>
+        <h3 className="sh-h2"><em>MIKIEDA 02</em>30秒回答 — 幹</h3>
         <div className="sh-paper after"><p>{data.kaito30}</p></div>
         <div className="sh-tools">
           <button className="mk-btn primary" onClick={() => copy(data.kaito30, "k")}>
@@ -194,7 +205,7 @@ function InterviewView({ data }) {
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">深掘りの枝分かれ</h3>
+        <h3 className="sh-h2"><em>MIKIEDA 03</em>深掘りの枝分かれ</h3>
         <p className="tr-hint" style={{ marginBottom: 14 }}>キーワードをタップすると、面接官の想定質問と答え方がひらくよ</p>
         <div className="tree">
           {(data.miki || []).map((m, mi) => (
@@ -333,13 +344,13 @@ function ResultView({ data, onPrint }) {
         ))}
       </nav>
 
-      <div className="sh-sheet" id="sec-soukan">
-        <h3 className="sh-h">全体所感</h3>
-        <p className="sh-body">{data.zentai}</p>
+      <div className="sh-sheet sec-lead" id="sec-soukan">
+        <h3 className="sh-h2"><em>REVIEW 01</em>全体所感</h3>
+        <p className="sh-lead">{data.zentai}</p>
       </div>
 
-      <div className="sh-sheet" id="sec-good">
-        <h3 className="sh-h">良かった点</h3>
+      <div className="sh-sheet sec-good" id="sec-good">
+        <h3 className="sh-h2"><em>REVIEW 02</em>良かった点</h3>
         {(data.yokatta || []).map((k, i) => (
           <div className="sh-item" key={i}>
             <span className="sh-mark good">💮</span>
@@ -348,8 +359,8 @@ function ResultView({ data, onPrint }) {
         ))}
       </div>
 
-      <div className="sh-sheet" id="sec-warn">
-        <h3 className="sh-h">気になった点</h3>
+      <div className="sh-sheet sec-warn" id="sec-warn">
+        <h3 className="sh-h2"><em>REVIEW 03</em>気になった点</h3>
         {(data.kininatta || []).map((k, i) => (
           <div className="sh-item" key={i}>
             <span className="sh-mark warn">✍️</span>
@@ -358,8 +369,8 @@ function ResultView({ data, onPrint }) {
         ))}
       </div>
 
-      <div className="sh-sheet" id="sec-rewrite">
-        <h3 className="sh-h">まるかめならこう書く</h3>
+      <div className="sh-sheet sec-rewrite" id="sec-rewrite">
+        <h3 className="sh-h2"><em>REVIEW 04</em>まるかめならこう書く</h3>
         <div className="sh-toggle" role="tablist">
           <button role="tab" className={rewriteView === "before" ? "on" : ""} onClick={() => setRewriteView("before")}>
             原文 <small>{beforeLen}字</small>
@@ -378,8 +389,8 @@ function ResultView({ data, onPrint }) {
         </div>
       </div>
 
-      <div className="sh-sheet" id="sec-mensetsu">
-        <h3 className="sh-h">面接で聞かれそうなこと</h3>
+      <div className="sh-sheet sec-qs" id="sec-mensetsu">
+        <h3 className="sh-h2"><em>REVIEW 05</em>面接で聞かれそうなこと</h3>
         <ol className="rv-qs">
           {(data.mensetsu || []).map((m, i) => <li key={i}>{m}</li>)}
         </ol>
@@ -428,6 +439,16 @@ export default function Home() {
   const [phase, setPhase] = useState("");
   const [err, setErr] = useState("");
   const [needPay, setNeedPay] = useState(false);
+
+  const [prog, setProg] = useState(0);
+  const [tipIdx, setTipIdx] = useState(0);
+  useEffect(() => {
+    if (!loading) { setProg(0); return; }
+    setTipIdx(Math.floor(Math.random() * TIPS.length));
+    const pi = setInterval(() => setProg((v) => v + (96 - v) * 0.035), 150);
+    const ti = setInterval(() => setTipIdx((i) => (i + 1) % TIPS.length), 5000);
+    return () => { clearInterval(pi); clearInterval(ti); };
+  }, [loading]);
 
   const [history, setHistory] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -670,8 +691,12 @@ export default function Home() {
         <div className="loading-screen" role="status">
           <img src="/kame-glass.png" alt="" className="mk-loading-img" />
           <p className="ls-phase">{phase}</p>
-          <p className="ls-note">30秒ほどかかるよ。このまま待っててね</p>
-          <div className="ls-dots"><span /><span /><span /></div>
+          <div className="ls-bar"><div className="ls-fill" style={{ width: `${prog}%` }} /></div>
+          <p className="ls-note">だいたい30秒くらいかかるよ</p>
+          <div className="ls-tip" key={tipIdx}>
+            <b>まるかめ豆知識</b>
+            <p>{TIPS[tipIdx]}</p>
+          </div>
         </div>
       )}
 
