@@ -335,20 +335,6 @@ export default function Home() {
     if (tab === "history" && user) loadHistory();
   }, [tab, user]);
 
-  // ゲスト時に入力したESを、ログイン後に復元して自動で添削開始
-  useEffect(() => {
-    if (!user) return;
-    let d = null;
-    try { d = localStorage.getItem("mk-draft"); } catch (_) {}
-    if (!d) return;
-    try { localStorage.removeItem("mk-draft"); } catch (_) {}
-    try {
-      const pl = JSON.parse(d);
-      setQtype(pl.qtype); setQuestion(pl.question); setBody(pl.body); setTags(pl.tags || []);
-      setTab("review");
-      generate(pl);
-    } catch (_) {}
-  }, [user]);
 
   const loadCredits = async (uid) => {
     const { data } = await supabase.from("profiles").select("credits").eq("id", uid).single();
@@ -390,12 +376,6 @@ export default function Home() {
   const generate = async (payloadArg) => {
     const pl = payloadArg || { qtype, question, body, tags };
     if (!pl.body.trim()) { setErr("ES本文を貼り付けてね🐢"); return; }
-    if (!user) {
-      // ゲスト: 入力を保存してログインへ。戻ってきたら自動で添削が始まる
-      try { localStorage.setItem("mk-draft", JSON.stringify(pl)); } catch (_) {}
-      loginGoogle();
-      return;
-    }
     setErr(""); setOut(null); setNeedPay(false); setLoading(true);
     setPhase("まるかめがESを読んでいます…");
     const timer = setTimeout(() => setPhase("赤ペンを入れています…"), 14000);
@@ -512,12 +492,7 @@ export default function Home() {
         </div>
       </div>
 
-      <button className="mk-go" onClick={() => generate()} disabled={loading}>
-        {user ? "🐢 添削してもらう" : "🐢 無料で添削してもらう"}
-      </button>
-      {!user && (
-        <p className="guest-note">ボタンを押すとGoogleログインに進むよ。入力した内容はそのまま引き継がれる</p>
-      )}
+      <button className="mk-go" onClick={() => generate()} disabled={loading}>🐢 添削してもらう</button>
       {err && <div className="mk-err">{err}</div>}
     </>
   );
@@ -548,29 +523,43 @@ export default function Home() {
       )}
 
       <div className={"mk-wrap" + (user ? " has-tabbar" : "")}>
-        {/* ---- 未ログイン: そのまま試せる ---- */}
+        {/* ---- 未ログイン(オンボーディング) ---- */}
         {authReady && !user && (
-          <>
-            <div className="guest-hero">
-              <div className="onb-icon onb-in" style={{ animationDelay: "0ms", width: 84, height: 84 }}>
-                <img src="/kame-pen.png" alt="まるかめ" style={{ width: 64, height: 64 }} />
+          <div className="onb">
+            <div className="onb-top">
+              <div className="onb-icon onb-in" style={{ animationDelay: "0ms" }}>
+                <img src="/kame-pen.png" alt="まるかめ" />
               </div>
-              <p className="onb-eyebrow onb-in" style={{ animationDelay: "70ms" }}>まるかめ ESレビューシート</p>
-              <h1 className="onb-title onb-in" style={{ animationDelay: "140ms", fontSize: "clamp(23px,6.4vw,30px)" }}>
+              <p className="onb-eyebrow onb-in" style={{ animationDelay: "80ms" }}>まるかめ ESレビューシート</p>
+              <h1 className="onb-title onb-in" style={{ animationDelay: "160ms" }}>
                 あなたのESに、<br />まるかめの赤ペンを。
               </h1>
-              <div className="guest-badges onb-in" style={{ animationDelay: "220ms" }}>
-                <span>💮 褒めて</span><span>🔍 なぜまで直して</span><span>🎤 面接まで</span>
+            </div>
+            <div className="onb-features">
+              <div className="onb-row onb-in" style={{ animationDelay: "260ms" }}>
+                <span className="onb-emoji">💮</span>
+                <div><b>良いところを、ちゃんと褒める</b><p>まず伝わっている魅力から教えてくれる</p></div>
               </div>
-              <p className="guest-free onb-in" style={{ animationDelay: "280ms" }}>初回1回無料 · 下に貼るだけ⬇</p>
+              <div className="onb-row onb-in" style={{ animationDelay: "340ms" }}>
+                <span className="onb-emoji">🔎</span>
+                <div><b>気になる点は「なぜ」まで具体的に</b><p>読み手がどこで引っかかるかが分かる</p></div>
+              </div>
+              <div className="onb-row onb-in" style={{ animationDelay: "420ms" }}>
+                <span className="onb-emoji">🎤</span>
+                <div><b>面接対策までつながる</b><p>ESから30秒回答と深掘りの枝分かれをつくれる</p></div>
+              </div>
             </div>
-            <div className="onb-in" style={{ animationDelay: "340ms" }}>
-              {reviewForm}
+            <div className="onb-bottom onb-in" style={{ animationDelay: "520ms" }}>
+              <button className="onb-cta" onClick={loginGoogle}>
+                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 34.9 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+                Googleではじめる
+              </button>
+              <p className="onb-note">初回は1回無料 · 登録は30秒</p>
+              <p className="onb-legal">
+                はじめることで<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意したことになります
+              </p>
             </div>
-            <p className="onb-legal" style={{ textAlign: "center" }}>
-              はじめることで<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意したことになります
-            </p>
-          </>
+          </div>
         )}
 
         {/* ---- 添削タブ ---- */}
