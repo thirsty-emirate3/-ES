@@ -3,6 +3,22 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
+const IC = {
+  pen: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></>,
+  mic: <><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M19 10v1a7 7 0 0 1-14 0v-1" /><path d="M12 18v4" /></>,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  heart: <path d="M19.5 13.6 12 21l-7.5-7.4A5.2 5.2 0 1 1 12 6.4a5.2 5.2 0 1 1 7.5 7.2z" />,
+  search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
+};
+function Icon({ name, size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {IC[name]}
+    </svg>
+  );
+}
+
 const QTYPES = [
   { t: "ガクチカ", e: "💪" },
   { t: "志望動機", e: "🔥" },
@@ -12,9 +28,9 @@ const QTYPES = [
 ];
 
 const TAG_SUGGEST = [
-  "🧩 論理のつながり", "🔍 具体性", "✂️ 文字数の調整", "🎯 企業への刺さり方",
-  "📖 読みやすさ", "🏗 構成・順番", "💬 言い回し", "🔥 熱意の伝わり方",
-  "🤝 チームでの動き方", "🌱 学び・成長の見せ方", "✏️ 誤字脱字チェック", "❓ 設問に答えているか",
+  "論理のつながり", "具体性", "文字数の調整", "企業への刺さり方",
+  "読みやすさ", "構成・順番", "言い回し", "熱意の伝わり方",
+  "チームでの動き方", "学び・成長の見せ方", "誤字脱字チェック", "設問に答えているか",
 ];
 
 const AXES = {
@@ -89,23 +105,23 @@ function InterviewView({ data }) {
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">🌰 一文要約(最初に渡す地図)</h3>
+        <h3 className="sh-h">一文要約 — 最初に渡す地図</h3>
         <p className="tr-ikkabun">{data.ikkabun}</p>
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">🌳 30秒回答(幹)</h3>
+        <h3 className="sh-h">30秒回答 — 幹</h3>
         <div className="sh-paper after"><p>{data.kaito30}</p></div>
         <div className="sh-tools">
           <button className="mk-btn primary" onClick={() => copy(data.kaito30, "k")}>
-            {copied === "k" ? "✅ コピーした!" : "📋 30秒回答をコピー"}
+            {copied === "k" ? "コピーしました" : "30秒回答をコピー"}
           </button>
         </div>
         <p className="tr-hint">全部話さない。ここで面接官に「聞きたい」と思わせるのが幹の役割🐢</p>
       </div>
 
       <div className="sh-sheet">
-        <h3 className="sh-h">🌿 深掘りの枝分かれ</h3>
+        <h3 className="sh-h">深掘りの枝分かれ</h3>
         <p className="tr-hint" style={{ marginBottom: 14 }}>キーワードをタップすると、面接官の想定質問と答え方がひらくよ</p>
         <div className="tree">
           {(data.miki || []).map((m, mi) => (
@@ -249,7 +265,7 @@ function ResultView({ data, onPrint }) {
         </div>
         <div className="sh-tools">
           <button className="mk-btn primary" onClick={() => copy(data.shuseiban, "s")}>
-            {copied === "s" ? "✅ コピーした!" : "📋 まるかめ版をコピー"}
+            {copied === "s" ? "コピーしました" : "まるかめ版をコピー"}
           </button>
         </div>
       </div>
@@ -267,7 +283,7 @@ function ResultView({ data, onPrint }) {
       </div>
 
       <div className="sh-tools" style={{ justifyContent: "center", marginTop: 4 }}>
-        <button className="mk-btn" onClick={onPrint}>🖨 PDFで保存</button>
+        <button className="mk-btn" onClick={onPrint}>PDFで保存</button>
         {avg && (
           <a
             className="mk-btn"
@@ -277,7 +293,7 @@ function ResultView({ data, onPrint }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            🐦 スコアをシェア
+            スコアをシェア
           </a>
         )}
       </div>
@@ -367,7 +383,7 @@ export default function Home() {
   const addCustom = () => {
     const t = customTag.trim();
     if (!t) return;
-    const tagged = "💡 " + t;
+    const tagged = t;
     if (!allTags.includes(tagged)) setExtraTags([...extraTags, tagged]);
     if (!tags.includes(tagged)) setTags([...tags, tagged]);
     setCustomTag("");
@@ -385,7 +401,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           qtype: pl.qtype, question: pl.question, body: pl.body,
-          tags: pl.tags.map((t) => t.replace(/^\S+\s/, "")),
+          tags: pl.tags,
         }),
       });
       const data = await res.json();
@@ -456,7 +472,7 @@ export default function Home() {
         <div className="mk-types">
           {QTYPES.map((q) => (
             <button key={q.t} className={"mk-type " + (qtype === q.t ? "on" : "")} onClick={() => setQtype(q.t)}>
-              <span className="e">{q.e}</span><span className="t">{q.t}</span>
+              <span className="t">{q.t}</span>
             </button>
           ))}
         </div>
@@ -492,7 +508,7 @@ export default function Home() {
         </div>
       </div>
 
-      <button className="mk-go" onClick={() => generate()} disabled={loading}>🐢 添削してもらう</button>
+      <button className="mk-go" onClick={() => generate()} disabled={loading}>添削してもらう</button>
       {err && <div className="mk-err">{err}</div>}
     </>
   );
@@ -510,14 +526,11 @@ export default function Home() {
       )}
 
       {user && (
-        <header className="mk-band">
-          <div className="mk-band-in">
-            <div className="mk-logo"><img src="/kame-pen.png" alt="まるかめ" /></div>
-            <div className="mk-title">
-              まるかめ ESレビューシート
-              <small>MARUKAME ES REVIEW SHEET</small>
-            </div>
-            {credits !== null && <div className="mk-cred">のこり {credits} 回</div>}
+        <header className="hd">
+          <div className="hd-in">
+            <img src="/kame-pen.png" alt="" className="hd-logo" />
+            <span className="hd-name">まるかめ ESレビューシート</span>
+            {credits !== null && <span className="hd-cred">のこり {credits}</span>}
           </div>
         </header>
       )}
@@ -537,15 +550,15 @@ export default function Home() {
             </div>
             <div className="onb-features">
               <div className="onb-row onb-in" style={{ animationDelay: "260ms" }}>
-                <span className="onb-emoji">💮</span>
+                <span className="onb-emoji"><Icon name="heart" size={20} /></span>
                 <div><b>良いところを、ちゃんと褒める</b><p>まず伝わっている魅力から教えてくれる</p></div>
               </div>
               <div className="onb-row onb-in" style={{ animationDelay: "340ms" }}>
-                <span className="onb-emoji">🔎</span>
+                <span className="onb-emoji"><Icon name="search" size={20} /></span>
                 <div><b>気になる点は「なぜ」まで具体的に</b><p>読み手がどこで引っかかるかが分かる</p></div>
               </div>
               <div className="onb-row onb-in" style={{ animationDelay: "420ms" }}>
-                <span className="onb-emoji">🎤</span>
+                <span className="onb-emoji"><Icon name="mic" size={20} /></span>
                 <div><b>面接対策までつながる</b><p>ESから30秒回答と深掘りの枝分かれをつくれる</p></div>
               </div>
             </div>
@@ -574,13 +587,13 @@ export default function Home() {
                 <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 4 }}>続けて添削するにはプランを選んでね</p>
                 <div className="mk-plans">
                   <div className="mk-plan">
-                    <div className="p-name">🍡 3回パック</div>
+                    <div className="p-name">3回パック</div>
                     <div className="p-price">¥500</div>
                     <div className="p-note">ES提出前の駆け込みに</div>
                     <button className="mk-btn primary" onClick={() => buy("pack")}>これにする</button>
                   </div>
                   <div className="mk-plan">
-                    <div className="p-name">🐢 月額プラン(10回/月)</div>
+                    <div className="p-name">月額プラン(10回/月)</div>
                     <div className="p-price">¥980<span style={{ fontSize: 12 }}>/月</span></div>
                     <div className="p-note">ESラッシュ期はこっちがお得</div>
                     <button className="mk-btn primary" onClick={() => buy("monthly")}>これにする</button>
@@ -615,7 +628,7 @@ export default function Home() {
               <div className="mk-types">
                 {QTYPES.map((q) => (
                   <button key={q.t} className={"mk-type " + (iQtype === q.t ? "on" : "")} onClick={() => setIQtype(q.t)}>
-                    <span className="e">{q.e}</span><span className="t">{q.t}</span>
+                    <span className="t">{q.t}</span>
                   </button>
                 ))}
               </div>
@@ -628,7 +641,7 @@ export default function Home() {
                 onChange={(e) => setIBody(e.target.value)} placeholder="面接対策したいESをペタッと🐢" />
             </div>
 
-            <button className="mk-go" onClick={generateInterview} disabled={loading}>🎤 幹枝シートをつくる</button>
+            <button className="mk-go" onClick={generateInterview} disabled={loading}>幹枝シートをつくる</button>
             {iErr && <div className="mk-err">{iErr}</div>}
 
             {iNeedPay && (
@@ -638,13 +651,13 @@ export default function Home() {
                 <p style={{ fontSize: 12.5, color: "var(--ink-soft)", marginTop: 4 }}>続けるにはプランを選んでね</p>
                 <div className="mk-plans">
                   <div className="mk-plan">
-                    <div className="p-name">🍡 3回パック</div>
+                    <div className="p-name">3回パック</div>
                     <div className="p-price">¥500</div>
                     <div className="p-note">ES提出前の駆け込みに</div>
                     <button className="mk-btn primary" onClick={() => buy("pack")}>これにする</button>
                   </div>
                   <div className="mk-plan">
-                    <div className="p-name">🐢 月額プラン(10回/月)</div>
+                    <div className="p-name">月額プラン(10回/月)</div>
                     <div className="p-price">¥980<span style={{ fontSize: 12 }}>/月</span></div>
                     <div className="p-note">選考ラッシュ期はこっちがお得</div>
                     <button className="mk-btn primary" onClick={() => buy("monthly")}>これにする</button>
@@ -682,7 +695,7 @@ export default function Home() {
                 <button key={row.kind + row.id} className="hist-item" onClick={() => setDetail(rowToData(row))}>
                   <div className="hist-left">
                     <span className="hist-qtype">
-                      {isInt ? "🎤 面接対策" : `${QTYPES.find((q) => q.t === row.qtype)?.e || "📄"} 添削`} · {row.qtype}
+                      {isInt ? "面接対策" : "添削"} · {row.qtype}
                     </span>
                     <span className="hist-q">{row.question || (isInt ? row.result?.ikkabun : "(設問未記入)") || ""}</span>
                     <span className="hist-date">{new Date(row.created_at).toLocaleDateString("ja-JP")}</span>
@@ -713,13 +726,13 @@ export default function Home() {
       {user && (
         <nav className="tabbar">
           <button className={tab === "review" ? "on" : ""} onClick={() => { setTab("review"); setDetail(null); }}>
-            <span className="tb-ico">✍️</span>添削
+            <span className="tb-ico"><Icon name="pen" /></span>添削
           </button>
           <button className={tab === "interview" ? "on" : ""} onClick={() => { setTab("interview"); setDetail(null); }}>
-            <span className="tb-ico">🎤</span>面接
+            <span className="tb-ico"><Icon name="mic" /></span>面接
           </button>
           <button className={tab === "history" ? "on" : ""} onClick={() => { setTab("history"); }}>
-            <span className="tb-ico">📚</span>きろく
+            <span className="tb-ico"><Icon name="clock" /></span>きろく
           </button>
         </nav>
       )}

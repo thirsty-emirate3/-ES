@@ -319,3 +319,70 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .tabbar button:active{transform:scale(.94);}
 .tabbar .tb-ico{transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
 .tabbar button.on .tb-ico{transform:translateY(-2px) scale(1.12);}
+
+/* ============================================================
+   モダン化オーバーライド: 柄を消し、枠を細く、影を柔らかく
+   ============================================================ */
+:root{--hairline:#EFE8D4; --paper:#FFFFFF; --bg:#FFFCF2;}
+.mk{background:var(--bg); background-image:none;}
+.loading-screen{background:var(--bg); background-image:none;}
+
+/* ヘッダー(薄い・半透明・追従) */
+.hd{position:sticky; top:0; z-index:40; background:rgba(255,252,242,.86);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--hairline);}
+.hd-in{max-width:720px; margin:0 auto; display:flex; align-items:center; gap:10px; padding:13px 18px;}
+.hd-logo{width:30px; height:30px; object-fit:contain;}
+.hd-name{font-size:15px; font-weight:900; letter-spacing:.02em;}
+.hd-cred{margin-left:auto; font-size:12px; font-weight:900; color:var(--matcha-deep);
+  background:var(--matcha-pale); border-radius:999px; padding:5px 13px;}
+
+/* カード: 髪の毛1本の線+浮遊感のある影 */
+.mk-card,.sh-sheet,.hist-item,.mk-plan{
+  background:var(--paper); border:1px solid var(--hairline);
+  box-shadow:0 1px 2px rgba(69,55,35,.04), 0 16px 40px -28px rgba(69,55,35,.28);}
+.mk-card{border-radius:22px;}
+
+/* 入力・チップ・小物 */
+.mk-textarea,.mk-input,.mk-select{border-width:1.5px; border-color:var(--hairline); background:#fff;}
+.mk-textarea:focus{border-color:var(--matcha); box-shadow:0 0 0 3px rgba(127,174,107,.15);}
+.mk-tag{border-width:1.5px; border-color:var(--hairline); background:#fff; padding:9px 15px;}
+.mk-tag.on{transform:none; background:var(--matcha-pale); border-color:var(--matcha);}
+.mk-tag-input{border-width:1.5px;}
+.mk-types{grid-template-columns:repeat(auto-fit,minmax(88px,1fr));}
+.mk-type{border-width:1.5px; border-color:var(--hairline); background:#fff; padding:13px 6px; border-radius:14px;}
+.mk-type.on{transform:none; box-shadow:none; background:var(--matcha-pale); border-color:var(--matcha);}
+.mk-type.on .t{color:var(--matcha-deep);}
+.mk-type .t{font-size:13px;}
+.mk-step .n{box-shadow:none;}
+.mk-hint{margin-left:36px;}
+
+/* ボタン: 3D縁取りをやめてフラット+浮き影 */
+.mk-go{box-shadow:0 10px 24px -10px rgba(94,143,78,.55); border-radius:16px;}
+.mk-go:active{transform:scale(.99); box-shadow:0 4px 12px -6px rgba(94,143,78,.5);}
+.mk-btn{border-width:1.5px; border-color:var(--hairline); border-radius:12px; background:#fff;}
+.mk-btn.primary{background:var(--matcha-pale); border-color:var(--matcha); color:var(--matcha-deep);}
+.mk-btn.primary:hover{border-color:var(--matcha);}
+.onb-icon{box-shadow:0 18px 40px -20px rgba(69,55,35,.35); border-radius:24px;}
+.onb-icon{background:#fff;}
+.onb-emoji{background:var(--matcha-pale); border:none; color:var(--matcha-deep); border-radius:13px;}
+.onb-cta{box-shadow:0 12px 30px -12px rgba(69,55,35,.35); border:1px solid var(--hairline);}
+
+/* タブバー */
+.tabbar{background:rgba(255,255,255,.88); border-top:1px solid var(--hairline);
+  box-shadow:0 -8px 24px -18px rgba(69,55,35,.3);}
+.tabbar .tb-ico{font-size:0; display:flex; align-items:center; justify-content:center; height:24px;}
+.tabbar button{font-size:10px; letter-spacing:.04em; gap:3px; border-radius:16px;}
+.tabbar button.on{background:var(--matcha-pale);}
+
+/* 結果・ツリー・履歴の細部 */
+.sh-nav{border:1px solid var(--hairline); background:rgba(255,255,255,.9);}
+.sh-paper{border-width:1.5px;}
+.tr-kw{border-width:1.5px;}
+.tr-q{border-width:1.5px; border-color:var(--hairline);}
+.hist-item{box-shadow:0 1px 2px rgba(69,55,35,.04), 0 16px 40px -28px rgba(69,55,35,.28);}
+.hist-arrow{color:#D8CFB6;}
+.mk-plans .mk-plan{border-radius:18px;}
+.mk-err{border-width:1.5px;}
+.rv-qs li{border-width:1.5px; border-color:var(--hairline); background:#fff;}
+.mk-cred{display:none;}
