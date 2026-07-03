@@ -335,6 +335,21 @@ export default function Home() {
     if (tab === "history" && user) loadHistory();
   }, [tab, user]);
 
+  // ゲスト時に入力したESを、ログイン後に復元して自動で添削開始
+  useEffect(() => {
+    if (!user) return;
+    let d = null;
+    try { d = localStorage.getItem("mk-draft"); } catch (_) {}
+    if (!d) return;
+    try { localStorage.removeItem("mk-draft"); } catch (_) {}
+    try {
+      const pl = JSON.parse(d);
+      setQtype(pl.qtype); setQuestion(pl.question); setBody(pl.body); setTags(pl.tags || []);
+      setTab("review");
+      generate(pl);
+    } catch (_) {}
+  }, [user]);
+
   const loadCredits = async (uid) => {
     const { data } = await supabase.from("profiles").select("credits").eq("id", uid).single();
     if (data) setCredits(data.credits);
@@ -372,8 +387,15 @@ export default function Home() {
     setCustomTag("");
   };
 
-  const generate = async () => {
-    if (!body.trim()) { setErr("ES本文を貼り付けてね🐢"); return; }
+  const generate = async (payloadArg) => {
+    const pl = payloadArg || { qtype, question, body, tags };
+    if (!pl.body.trim()) { setErr("ES本文を貼り付けてね🐢"); return; }
+    if (!user) {
+      // ゲスト: 入力を保存してログインへ。戻ってきたら自動で添削が始まる
+      try { localStorage.setItem("mk-draft", JSON.stringify(pl)); } catch (_) {}
+      loginGoogle();
+      return;
+    }
     setErr(""); setOut(null); setNeedPay(false); setLoading(true);
     setPhase("まるかめがESを読んでいます…");
     const timer = setTimeout(() => setPhase("赤ペンを入れています…"), 14000);
@@ -382,15 +404,15 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          qtype, question, body,
-          tags: tags.map((t) => t.replace(/^\S+\s/, "")),
+          qtype: pl.qtype, question: pl.question, body: pl.body,
+          tags: pl.tags.map((t) => t.replace(/^\S+\s/, "")),
         }),
       });
       const data = await res.json();
       if (res.status === 402 || data.error === "no_credits") { setNeedPay(true); return; }
       if (!res.ok) throw new Error(data.error || "エラーが発生しました");
       setOut({
-        ...data, qtype, question, body,
+        ...data, qtype: pl.qtype, question: pl.question, body: pl.body,
         date: new Date().toLocaleDateString("ja-JP"),
       });
       if (typeof data.creditsLeft === "number") setCredits(data.creditsLeft);
@@ -447,6 +469,59 @@ export default function Home() {
 
   const activeResult = detail || out;
 
+  const reviewForm = (
+    <>
+      <div className="mk-card">
+        <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
+        <div className="mk-types">
+          {QTYPES.map((q) => (
+            <button key={q.t} className={"mk-type " + (qtype === q.t ? "on" : "")} onClick={() => setQtype(q.t)}>
+              <span className="e">{q.e}</span><span className="t">{q.t}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mk-card">
+        <div className="mk-step"><span className="n">2</span>設問文を貼ってね</div>
+        <div className="mk-hint">文字数制限(例: 400字以内)もそのまま貼ればOK。自動で読み取るよ</div>
+        <textarea className="mk-textarea" style={{ minHeight: 64 }} value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          placeholder="例: 学生時代に最も力を入れたことを教えてください(400字以内)" />
+      </div>
+
+      <div className="mk-card">
+        <div className="mk-step"><span className="n">3</span>ES本文を貼ってね</div>
+        <textarea className="mk-textarea" style={{ minHeight: 190 }} value={body}
+          onChange={(e) => setBody(e.target.value)} placeholder="書いたESをここにペタッと🐢" />
+        <div className="mk-meta"><span className={bodyLen > 0 ? "ok" : ""}>{bodyLen}字</span></div>
+      </div>
+
+      <div className="mk-card">
+        <div className="mk-step"><span className="n">4</span>とくに見てほしいところは?</div>
+        <div className="mk-hint">いくつ選んでもOK。選ばなければ全体をまるっと見るよ</div>
+        <div className="mk-tags">
+          {allTags.map((t) => (
+            <button key={t} className={"mk-tag " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>
+          ))}
+        </div>
+        <div className="mk-tag-add">
+          <input className="mk-tag-input" value={customTag} onChange={(e) => setCustomTag(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="じぶんで追加もできるよ(例: 数字の使い方)" />
+          <button className="mk-tag-btn" onClick={addCustom}>+ 追加</button>
+        </div>
+      </div>
+
+      <button className="mk-go" onClick={() => generate()} disabled={loading}>
+        {user ? "🐢 添削してもらう" : "🐢 無料で添削してもらう"}
+      </button>
+      {!user && (
+        <p className="guest-note">ボタンを押すとGoogleログインに進むよ。入力した内容はそのまま引き継がれる</p>
+      )}
+      {err && <div className="mk-err">{err}</div>}
+    </>
+  );
+
   return (
     <div className="mk">
       {/* ---- 添削中フルスクリーン ---- */}
@@ -473,91 +548,35 @@ export default function Home() {
       )}
 
       <div className={"mk-wrap" + (user ? " has-tabbar" : "")}>
-        {/* ---- 未ログイン(オンボーディング) ---- */}
+        {/* ---- 未ログイン: そのまま試せる ---- */}
         {authReady && !user && (
-          <div className="onb">
-            <div className="onb-top">
-              <div className="onb-icon onb-in" style={{ animationDelay: "0ms" }}>
-                <img src="/kame-pen.png" alt="まるかめ" />
+          <>
+            <div className="guest-hero">
+              <div className="onb-icon onb-in" style={{ animationDelay: "0ms", width: 84, height: 84 }}>
+                <img src="/kame-pen.png" alt="まるかめ" style={{ width: 64, height: 64 }} />
               </div>
-              <p className="onb-eyebrow onb-in" style={{ animationDelay: "80ms" }}>まるかめ ESレビューシート</p>
-              <h1 className="onb-title onb-in" style={{ animationDelay: "160ms" }}>
+              <p className="onb-eyebrow onb-in" style={{ animationDelay: "70ms" }}>まるかめ ESレビューシート</p>
+              <h1 className="onb-title onb-in" style={{ animationDelay: "140ms", fontSize: "clamp(23px,6.4vw,30px)" }}>
                 あなたのESに、<br />まるかめの赤ペンを。
               </h1>
-            </div>
-            <div className="onb-features">
-              <div className="onb-row onb-in" style={{ animationDelay: "260ms" }}>
-                <span className="onb-emoji">💮</span>
-                <div><b>良いところを、ちゃんと褒める</b><p>まず伝わっている魅力から教えてくれる</p></div>
+              <div className="guest-badges onb-in" style={{ animationDelay: "220ms" }}>
+                <span>💮 褒めて</span><span>🔍 なぜまで直して</span><span>🎤 面接まで</span>
               </div>
-              <div className="onb-row onb-in" style={{ animationDelay: "340ms" }}>
-                <span className="onb-emoji">🔎</span>
-                <div><b>気になる点は「なぜ」まで具体的に</b><p>読み手がどこで引っかかるかが分かる</p></div>
-              </div>
-              <div className="onb-row onb-in" style={{ animationDelay: "420ms" }}>
-                <span className="onb-emoji">✍️</span>
-                <div><b>まるかめが書いた修正版つき</b><p>あなたのエピソードのまま、伝わる形に</p></div>
-              </div>
+              <p className="guest-free onb-in" style={{ animationDelay: "280ms" }}>初回1回無料 · 下に貼るだけ⬇</p>
             </div>
-            <div className="onb-bottom onb-in" style={{ animationDelay: "520ms" }}>
-              <button className="onb-cta" onClick={loginGoogle}>
-                <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41.4 34.9 44 30 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
-                Googleではじめる
-              </button>
-              <p className="onb-note">初回は1回無料 · 登録は30秒</p>
-              <p className="onb-legal">
-                はじめることで<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意したことになります
-              </p>
+            <div className="onb-in" style={{ animationDelay: "340ms" }}>
+              {reviewForm}
             </div>
-          </div>
+            <p className="onb-legal" style={{ textAlign: "center" }}>
+              はじめることで<a href="/terms">利用規約</a>と<a href="/privacy">プライバシーポリシー</a>に同意したことになります
+            </p>
+          </>
         )}
 
         {/* ---- 添削タブ ---- */}
         {user && tab === "review" && !out && (
           <>
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
-              <div className="mk-types">
-                {QTYPES.map((q) => (
-                  <button key={q.t} className={"mk-type " + (qtype === q.t ? "on" : "")} onClick={() => setQtype(q.t)}>
-                    <span className="e">{q.e}</span><span className="t">{q.t}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">2</span>設問文を貼ってね</div>
-              <div className="mk-hint">文字数制限(例: 400字以内)もそのまま貼ればOK。自動で読み取るよ</div>
-              <textarea className="mk-textarea" style={{ minHeight: 64 }} value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                placeholder="例: 学生時代に最も力を入れたことを教えてください(400字以内)" />
-            </div>
-
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">3</span>ES本文を貼ってね</div>
-              <textarea className="mk-textarea" style={{ minHeight: 190 }} value={body}
-                onChange={(e) => setBody(e.target.value)} placeholder="書いたESをここにペタッと🐢" />
-              <div className="mk-meta"><span className={bodyLen > 0 ? "ok" : ""}>{bodyLen}字</span></div>
-            </div>
-
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">4</span>とくに見てほしいところは?</div>
-              <div className="mk-hint">いくつ選んでもOK。選ばなければ全体をまるっと見るよ</div>
-              <div className="mk-tags">
-                {allTags.map((t) => (
-                  <button key={t} className={"mk-tag " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>
-                ))}
-              </div>
-              <div className="mk-tag-add">
-                <input className="mk-tag-input" value={customTag} onChange={(e) => setCustomTag(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="じぶんで追加もできるよ(例: 数字の使い方)" />
-                <button className="mk-tag-btn" onClick={addCustom}>+ 追加</button>
-              </div>
-            </div>
-
-            <button className="mk-go" onClick={generate} disabled={loading}>🐢 添削してもらう</button>
-            {err && <div className="mk-err">{err}</div>}
+            {reviewForm}
 
             {needPay && (
               <div className="mk-card" style={{ marginTop: 18, textAlign: "center" }}>

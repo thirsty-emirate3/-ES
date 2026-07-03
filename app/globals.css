@@ -302,3 +302,20 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .tr-a p{font-size:13px; line-height:1.95;}
 .tr-why{margin-top:8px; padding-top:8px; border-top:2px dashed var(--line);
   color:var(--ink-soft); font-size:12.5px !important;}
+
+/* ---- ゲスト向けヒーロー ---- */
+.guest-hero{text-align:center; padding:26px 8px 22px;}
+.guest-badges{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:14px;}
+.guest-badges span{font-size:12px; font-weight:900; background:#FFFDF4; border:2px solid var(--line);
+  border-radius:999px; padding:7px 13px; color:var(--ink);}
+.guest-free{margin-top:12px; font-size:12.5px; font-weight:900; color:var(--matcha-deep);}
+.guest-note{text-align:center; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:10px; line-height:1.7;}
+
+/* ---- タブバー磨き込み ---- */
+.tabbar{padding:8px 14px calc(8px + env(safe-area-inset-bottom)); gap:6px;
+  box-shadow:0 -6px 20px -12px rgba(69,55,35,.25);}
+.tabbar button{position:relative; padding:8px 0 6px; transition:color .18s, transform .18s;}
+.tabbar button.on{background:var(--matcha-pale);}
+.tabbar button:active{transform:scale(.94);}
+.tabbar .tb-ico{transition:transform .18s cubic-bezier(.34,1.56,.64,1);}
+.tabbar button.on .tb-ico{transform:translateY(-2px) scale(1.12);}
