@@ -528,3 +528,59 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
   background:var(--matcha-pale); border-radius:999px; padding:2px 8px; margin-left:7px; vertical-align:1px;}
 .hist-q{font-size:12.5px; font-weight:700; color:var(--ink-soft);}
 .hist-date2{font-size:11.5px; font-weight:900; color:#C9BEA2; white-space:nowrap;}
+
+/* ============================================================
+   結果画面の演出 & マイクロインタラクション
+   ============================================================ */
+/* セクションがスクロールでふわっと現れる */
+.sh-reveal .sh-sheet{opacity:0; transform:translateY(22px);
+  transition:opacity .55s ease, transform .55s cubic-bezier(.22,.9,.3,1);}
+.sh-reveal .sh-sheet.sh-vis{opacity:1; transform:none;}
+
+/* レーダーが中心から広がる */
+.radar-data{transform-origin:center; transform-box:fill-box; animation:radarIn .85s cubic-bezier(.22,.9,.3,1) .35s both;}
+@keyframes radarIn{from{transform:scale(.04); opacity:0;}to{transform:scale(1); opacity:1;}}
+.radar-dot{opacity:0; animation:medPop .3s ease forwards 1.05s;}
+
+/* 赤丸が一筆書きで描かれる */
+.sh-circle ellipse{stroke-dasharray:100; stroke-dashoffset:100;}
+.sh-circle .c1{animation:circDraw .55s ease forwards 1.15s;}
+.sh-circle .c2{animation:circDraw .55s ease forwards 1.35s;}
+@keyframes circDraw{to{stroke-dashoffset:0;}}
+
+/* 検印スタンプがポンッと押される */
+.sh-stamp{opacity:0; animation:stampIn .45s cubic-bezier(.34,1.56,.64,1) 1.7s forwards;}
+@keyframes stampIn{
+  0%{opacity:0; transform:scale(2.3) rotate(22deg);}
+  60%{opacity:.9; transform:scale(.94) rotate(4deg);}
+  100%{opacity:.8; transform:scale(1) rotate(6deg);}}
+
+/* まるかめの登場 */
+.sh-kame{animation:kameIn .6s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes kameIn{from{opacity:0; transform:scale(.5) translateY(16px);}to{opacity:1; transform:none;}}
+
+/* 高得点の紙吹雪 */
+.sh-hero{overflow:hidden;}
+.confetti{position:absolute; inset:0; pointer-events:none;}
+.confetti i{position:absolute; top:-14px; width:9px; height:13px; border-radius:2.5px; animation:confFall linear forwards;}
+@keyframes confFall{to{transform:translateY(360px) rotate(560deg); opacity:0;}}
+
+/* 細部の気持ちよさ */
+.mk-tag.on{animation:tagpop .22s ease;}
+.mk-btn.copied{animation:tagpop .32s ease;}
+@keyframes tagpop{50%{transform:scale(1.09);}}
+.tr-edas,.tr-a{animation:openIn .26s ease;}
+@keyframes openIn{from{opacity:0; transform:translateY(-6px);}to{opacity:1; transform:none;}}
+
+/* 幹枝ヒーローのマイクまるかめ */
+.med-kame{width:104px; height:104px; object-fit:contain; margin-bottom:6px;
+  animation:kameIn .6s cubic-bezier(.34,1.56,.64,1) both;}
+
+@media(prefers-reduced-motion:reduce){
+  .sh-reveal .sh-sheet{opacity:1; transform:none; transition:none;}
+  .radar-data,.radar-dot,.sh-circle .c1,.sh-circle .c2,.sh-stamp,.sh-kame,.confetti i,
+  .mk-tag.on,.mk-btn.copied,.tr-edas,.tr-a,.med-kame{animation:none;}
+  .sh-stamp{opacity:.8;}
+  .radar-dot{opacity:1;}
+  .sh-circle ellipse{stroke-dashoffset:0;}
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const IC = {
@@ -10,6 +10,24 @@ const IC = {
   heart: <path d="M19.5 13.6 12 21l-7.5-7.4A5.2 5.2 0 1 1 12 6.4a5.2 5.2 0 1 1 7.5 7.2z" />,
   search: <><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>,
 };
+const CONF = ["#F3C64F", "#EF9086", "#7FAE6B", "#8FC1E3", "#E7A6C7"];
+
+function useReveal(ref) {
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      root.querySelectorAll(".sh-sheet").forEach((el) => el.classList.add("sh-vis"));
+      return;
+    }
+    const obs = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add("sh-vis"); obs.unobserve(e.target); }
+    }), { threshold: 0.1 });
+    root.querySelectorAll(".sh-sheet").forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+
 function Icon({ name, size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -57,10 +75,10 @@ function Radar({ labels, values }) {
       {labels.map((_, i) => (
         <line key={i} x1={cx} y1={cy} x2={pt(i, 1)[0]} y2={pt(i, 1)[1]} stroke="#EADFC0" strokeWidth="1" />
       ))}
-      <polygon points={dataPoly} fill="rgba(127,174,107,.38)" stroke="#5E8F4E" strokeWidth="2.5" strokeLinejoin="round" />
+      <polygon className="radar-data" points={dataPoly} fill="rgba(127,174,107,.38)" stroke="#5E8F4E" strokeWidth="2.5" strokeLinejoin="round" />
       {values.map((v, i) => {
         const [x, y] = pt(i, Math.max(0.08, Math.min(v, 10) / 10));
-        return <circle key={i} cx={x} cy={y} r="4" fill="#5E8F4E" stroke="#FFFDF4" strokeWidth="2" />;
+        return <circle key={i} className="radar-dot" cx={x} cy={y} r="4" fill="#5E8F4E" stroke="#FFFDF4" strokeWidth="2" />;
       })}
       {labels.map((l, i) => {
         const [x, y] = pt(i, 1.28);
@@ -122,7 +140,7 @@ function StepProgress({ step, total }) {
     <div className="wiz-prog" role="progressbar" aria-valuenow={step + 1} aria-valuemax={total}>
       <div className="wiz-track">
         <div className="wiz-fill" style={{ width: `${pct}%` }} />
-        <img src="/kame-pen.png" alt="" className="wiz-kame" style={{ left: `${pct}%` }} />
+        <img src="/kame-walk.png" alt="" className="wiz-kame" style={{ left: `${pct}%` }} />
       </div>
       <span className="wiz-count">{step + 1}/{total}</span>
     </div>
@@ -134,6 +152,8 @@ function InterviewView({ data }) {
   const [openKw, setOpenKw] = useState(() => new Set());
   const [openQ, setOpenQ] = useState(() => new Set());
   const [copied, setCopied] = useState("");
+  const rootRef = useRef(null);
+  useReveal(rootRef);
   const toggle = (set, setFn, key) => {
     const next = new Set(set);
     next.has(key) ? next.delete(key) : next.add(key);
@@ -150,7 +170,7 @@ function InterviewView({ data }) {
   };
 
   return (
-    <div className="sh">
+    <div className="sh sh-reveal" ref={rootRef}>
       <div className="sh-sheet sh-hero">
         <div className="sh-stamp" aria-hidden="true">面接対策</div>
         <img src="/kame-pen.png" alt="" className="sh-kame" />
@@ -232,6 +252,9 @@ const SECTIONS = [
 function ResultView({ data, onPrint }) {
   const [copied, setCopied] = useState("");
   const [rewriteView, setRewriteView] = useState("after");
+  const [disp, setDisp] = useState("0.0");
+  const rootRef = useRef(null);
+  useReveal(rootRef);
   const copy = async (text, key) => {
     try { await navigator.clipboard.writeText(text); }
     catch (_) {
@@ -246,24 +269,56 @@ function ResultView({ data, onPrint }) {
   const labels = data.axes || AXES[data.qtype] || AXES["その他"];
   const scores = Array.isArray(data.scores) && data.scores.length === labels.length ? data.scores : null;
   const avg = scores ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : null;
+  const high = avg !== null && parseFloat(avg) >= 8;
+
+  useEffect(() => {
+    if (avg === null) return;
+    const target = parseFloat(avg);
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisp(avg); return;
+    }
+    const t0 = performance.now(), dur = 1100;
+    let raf;
+    const tick = (t) => {
+      const pr = Math.min(1, (t - t0) / dur);
+      const e = 1 - Math.pow(1 - pr, 3);
+      setDisp((target * e).toFixed(1));
+      if (pr < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [avg]);
+
   const beforeLen = (data.body || "").replace(/\s/g, "").length;
   const afterLen = (data.shuseiban || "").replace(/\s/g, "").length;
   const showing = rewriteView === "after" ? data.shuseiban : data.body;
 
   return (
-    <div className="sh">
+    <div className="sh sh-reveal" ref={rootRef}>
       {/* 表紙: 診断カルテ */}
       <div className="sh-sheet sh-hero" id="sec-karte">
         <div className="sh-stamp" aria-hidden="true">添削済</div>
-        <img src="/kame-hanamaru.png" alt="" className="sh-kame" />
+        {high && (
+          <div className="confetti" aria-hidden="true">
+            {Array.from({ length: 18 }).map((_, i) => (
+              <i key={i} style={{
+                left: `${(i * 53) % 100}%`,
+                background: CONF[i % 5],
+                animationDelay: `${(i % 6) * 0.12}s`,
+                animationDuration: `${1.6 + (i % 4) * 0.35}s`,
+              }} />
+            ))}
+          </div>
+        )}
+        <img src={high ? "/kame-jump.png" : "/kame-hanamaru.png"} alt="" className="sh-kame" />
         <p className="sh-meta">{data.qtype} · {data.date}</p>
         {avg && (
           <div className="sh-score">
             <svg viewBox="0 0 120 74" className="sh-circle" aria-hidden="true">
-              <ellipse cx="60" cy="37" rx="52" ry="28" fill="none" stroke="var(--shu)" strokeWidth="3" strokeLinecap="round" transform="rotate(-3 60 37)" />
-              <ellipse cx="60" cy="37" rx="50" ry="26" fill="none" stroke="var(--shu)" strokeWidth="2" strokeLinecap="round" opacity=".45" transform="rotate(2 60 37)" />
+              <ellipse className="c1" pathLength="100" cx="60" cy="37" rx="52" ry="28" fill="none" stroke="var(--shu)" strokeWidth="3" strokeLinecap="round" transform="rotate(-3 60 37)" />
+              <ellipse className="c2" pathLength="100" cx="60" cy="37" rx="50" ry="26" fill="none" stroke="var(--shu)" strokeWidth="2" strokeLinecap="round" opacity=".45" transform="rotate(2 60 37)" />
             </svg>
-            <span className="sh-score-n">{avg}</span>
+            <span className="sh-score-n">{disp}</span>
             <small>/10</small>
           </div>
         )}
@@ -317,7 +372,7 @@ function ResultView({ data, onPrint }) {
           <p>{showing}</p>
         </div>
         <div className="sh-tools">
-          <button className="mk-btn primary" onClick={() => copy(data.shuseiban, "s")}>
+          <button className={"mk-btn primary" + (copied === "s" ? " copied" : "")} onClick={() => copy(data.shuseiban, "s")}>
             {copied === "s" ? "コピーしました" : "まるかめ版をコピー"}
           </button>
         </div>
@@ -613,7 +668,7 @@ export default function Home() {
       {/* ---- 添削中フルスクリーン ---- */}
       {loading && (
         <div className="loading-screen" role="status">
-          <img src="/kame-reading.png" alt="" className="mk-loading-img" />
+          <img src="/kame-glass.png" alt="" className="mk-loading-img" />
           <p className="ls-phase">{phase}</p>
           <p className="ls-note">30秒ほどかかるよ。このまま待っててね</p>
           <div className="ls-dots"><span /><span /><span /></div>
@@ -716,6 +771,7 @@ export default function Home() {
               {iStep === 0 && (
                 <>
                   <div className="med-hero">
+                    <img src="/kame-mic.png" alt="" className="med-kame" />
                     <p className="med-eyebrow">MIKI-EDA METHOD</p>
                     <h2 className="med-title">幹枝シート</h2>
                     <p className="med-sub">全部話すと、面接は負け。<br />幹だけ渡して、深掘りは枝で返す。</p>
