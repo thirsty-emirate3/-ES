@@ -76,6 +76,20 @@ function Radar({ labels, values }) {
   );
 }
 
+/* ---- ウィザード進捗: まるかめが道を歩く ---- */
+function StepProgress({ step, total }) {
+  const pct = (step / (total - 1)) * 100;
+  return (
+    <div className="wiz-prog" role="progressbar" aria-valuenow={step + 1} aria-valuemax={total}>
+      <div className="wiz-track">
+        <div className="wiz-fill" style={{ width: `${pct}%` }} />
+        <img src="/kame-pen.png" alt="" className="wiz-kame" style={{ left: `${pct}%` }} />
+      </div>
+      <span className="wiz-count">{step + 1}/{total}</span>
+    </div>
+  );
+}
+
 /* ---- 幹枝シート = NotebookLM風の展開ツリー ---- */
 function InterviewView({ data }) {
   const [openKw, setOpenKw] = useState(() => new Set());
@@ -324,6 +338,9 @@ export default function Home() {
   const [history, setHistory] = useState(null);
   const [detail, setDetail] = useState(null);
 
+  const [rStep, setRStep] = useState(0);
+  const [iStep, setIStep] = useState(0);
+
   const [iQtype, setIQtype] = useState("ガクチカ");
   const [iQuestion, setIQuestion] = useState("");
   const [iBody, setIBody] = useState("");
@@ -467,48 +484,75 @@ export default function Home() {
 
   const reviewForm = (
     <>
-      <div className="mk-card">
-        <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
-        <div className="mk-types">
-          {QTYPES.map((q) => (
-            <button key={q.t} className={"mk-type " + (qtype === q.t ? "on" : "")} onClick={() => setQtype(q.t)}>
-              <span className="t">{q.t}</span>
-            </button>
-          ))}
-        </div>
+      <StepProgress step={rStep} total={4} />
+
+      <div className="wiz-step" key={"r" + rStep}>
+        {rStep === 0 && (
+          <div className="mk-card">
+            <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
+            <div className="mk-types">
+              {QTYPES.map((q) => (
+                <button key={q.t} className={"mk-type " + (qtype === q.t ? "on" : "")}
+                  onClick={() => { setQtype(q.t); setRStep(1); }}>
+                  <span className="t">{q.t}</span>
+                </button>
+              ))}
+            </div>
+            <p className="wiz-hint">タップするとつぎに進むよ</p>
+          </div>
+        )}
+
+        {rStep === 1 && (
+          <div className="mk-card">
+            <div className="mk-step"><span className="n">2</span>設問文を貼ってね</div>
+            <div className="mk-hint">文字数制限(例: 400字以内)もそのまま貼ればOK。自動で読み取るよ</div>
+            <textarea className="mk-textarea" style={{ minHeight: 110 }} value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="例: 学生時代に最も力を入れたことを教えてください(400字以内)" />
+          </div>
+        )}
+
+        {rStep === 2 && (
+          <div className="mk-card">
+            <div className="mk-step"><span className="n">3</span>ES本文を貼ってね</div>
+            <textarea className="mk-textarea" style={{ minHeight: 260 }} value={body}
+              onChange={(e) => setBody(e.target.value)} placeholder="書いたESをここにペタッと🐢" />
+            <div className="mk-meta"><span className={bodyLen > 0 ? "ok" : ""}>{bodyLen}字</span></div>
+          </div>
+        )}
+
+        {rStep === 3 && (
+          <div className="mk-card">
+            <div className="mk-step"><span className="n">4</span>とくに見てほしいところは?</div>
+            <div className="mk-hint">いくつ選んでもOK。選ばなければ全体をまるっと見るよ</div>
+            <div className="mk-tags">
+              {allTags.map((t) => (
+                <button key={t} className={"mk-tag " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>
+              ))}
+            </div>
+            <div className="mk-tag-add">
+              <input className="mk-tag-input" value={customTag} onChange={(e) => setCustomTag(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="じぶんで追加もできるよ(例: 数字の使い方)" />
+              <button className="mk-tag-btn" onClick={addCustom}>+ 追加</button>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mk-card">
-        <div className="mk-step"><span className="n">2</span>設問文を貼ってね</div>
-        <div className="mk-hint">文字数制限(例: 400字以内)もそのまま貼ればOK。自動で読み取るよ</div>
-        <textarea className="mk-textarea" style={{ minHeight: 64 }} value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="例: 学生時代に最も力を入れたことを教えてください(400字以内)" />
+      <div className="wiz-nav">
+        {rStep > 0 && <button className="wiz-back" onClick={() => setRStep(rStep - 1)}>もどる</button>}
+        {rStep === 1 && (
+          <button className="mk-go wiz-next" onClick={() => setRStep(2)}>
+            {question.trim() ? "次へ" : "スキップ"}
+          </button>
+        )}
+        {rStep === 2 && (
+          <button className="mk-go wiz-next" disabled={!body.trim()} onClick={() => setRStep(3)}>次へ</button>
+        )}
+        {rStep === 3 && (
+          <button className="mk-go wiz-next" onClick={() => generate()} disabled={loading}>添削してもらう</button>
+        )}
       </div>
-
-      <div className="mk-card">
-        <div className="mk-step"><span className="n">3</span>ES本文を貼ってね</div>
-        <textarea className="mk-textarea" style={{ minHeight: 190 }} value={body}
-          onChange={(e) => setBody(e.target.value)} placeholder="書いたESをここにペタッと🐢" />
-        <div className="mk-meta"><span className={bodyLen > 0 ? "ok" : ""}>{bodyLen}字</span></div>
-      </div>
-
-      <div className="mk-card">
-        <div className="mk-step"><span className="n">4</span>とくに見てほしいところは?</div>
-        <div className="mk-hint">いくつ選んでもOK。選ばなければ全体をまるっと見るよ</div>
-        <div className="mk-tags">
-          {allTags.map((t) => (
-            <button key={t} className={"mk-tag " + (tags.includes(t) ? "on" : "")} onClick={() => toggleTag(t)}>{t}</button>
-          ))}
-        </div>
-        <div className="mk-tag-add">
-          <input className="mk-tag-input" value={customTag} onChange={(e) => setCustomTag(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && addCustom()} placeholder="じぶんで追加もできるよ(例: 数字の使い方)" />
-          <button className="mk-tag-btn" onClick={addCustom}>+ 追加</button>
-        </div>
-      </div>
-
-      <button className="mk-go" onClick={() => generate()} disabled={loading}>添削してもらう</button>
       {err && <div className="mk-err">{err}</div>}
     </>
   );
@@ -607,7 +651,7 @@ export default function Home() {
         {/* ---- 添削結果 ---- */}
         {user && tab === "review" && out && (
           <>
-            <button className="rv-back" onClick={() => setOut(null)}>← 新しく添削する</button>
+            <button className="rv-back" onClick={() => { setOut(null); setRStep(0); }}>← 新しく添削する</button>
             <ResultView data={out} onPrint={() => window.print()} />
           </>
         )}
@@ -615,33 +659,51 @@ export default function Home() {
         {/* ---- 面接タブ ---- */}
         {user && tab === "interview" && !iOut && (
           <>
-            <div className="mk-card tr-intro">
-              <img src="/kame-reading.png" alt="" />
-              <div>
-                <b>幹枝(みきえだ)シート</b>
-                <p>ESを貼ると、面接用の「30秒回答」と「深掘りの枝分かれ」に変換するよ。ESは通るのに面接で落ちる人のための機能🐢</p>
-              </div>
+            <StepProgress step={iStep} total={2} />
+
+            <div className="wiz-step" key={"i" + iStep}>
+              {iStep === 0 && (
+                <>
+                  <div className="mk-card tr-intro">
+                    <img src="/kame-reading.png" alt="" />
+                    <div>
+                      <b>幹枝(みきえだ)シート</b>
+                      <p>ESを貼ると、面接用の「30秒回答」と「深掘りの枝分かれ」に変換するよ。ESは通るのに面接で落ちる人のための機能🐢</p>
+                    </div>
+                  </div>
+                  <div className="mk-card">
+                    <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
+                    <div className="mk-types">
+                      {QTYPES.map((q) => (
+                        <button key={q.t} className={"mk-type " + (iQtype === q.t ? "on" : "")}
+                          onClick={() => { setIQtype(q.t); setIStep(1); }}>
+                          <span className="t">{q.t}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="wiz-hint">タップするとつぎに進むよ</p>
+                  </div>
+                </>
+              )}
+
+              {iStep === 1 && (
+                <div className="mk-card">
+                  <div className="mk-step"><span className="n">2</span>ES本文を貼ってね</div>
+                  <div className="mk-hint">添削済みでも、書いたままでもOK。これを面接用に組み替えるよ</div>
+                  <textarea className="mk-textarea" style={{ minHeight: 260 }} value={iBody}
+                    onChange={(e) => setIBody(e.target.value)} placeholder="面接対策したいESをペタッと🐢" />
+                </div>
+              )}
             </div>
 
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">1</span>設問のタイプは?</div>
-              <div className="mk-types">
-                {QTYPES.map((q) => (
-                  <button key={q.t} className={"mk-type " + (iQtype === q.t ? "on" : "")} onClick={() => setIQtype(q.t)}>
-                    <span className="t">{q.t}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="wiz-nav">
+              {iStep > 0 && <button className="wiz-back" onClick={() => setIStep(0)}>もどる</button>}
+              {iStep === 1 && (
+                <button className="mk-go wiz-next" disabled={!iBody.trim() || loading} onClick={generateInterview}>
+                  幹枝シートをつくる
+                </button>
+              )}
             </div>
-
-            <div className="mk-card">
-              <div className="mk-step"><span className="n">2</span>ES本文を貼ってね</div>
-              <div className="mk-hint">添削済みでも、書いたままでもOK。これを面接用に組み替えるよ</div>
-              <textarea className="mk-textarea" style={{ minHeight: 190 }} value={iBody}
-                onChange={(e) => setIBody(e.target.value)} placeholder="面接対策したいESをペタッと🐢" />
-            </div>
-
-            <button className="mk-go" onClick={generateInterview} disabled={loading}>幹枝シートをつくる</button>
             {iErr && <div className="mk-err">{iErr}</div>}
 
             {iNeedPay && (
@@ -670,7 +732,7 @@ export default function Home() {
 
         {user && tab === "interview" && iOut && (
           <>
-            <button className="rv-back" onClick={() => setIOut(null)}>← 新しくつくる</button>
+            <button className="rv-back" onClick={() => { setIOut(null); setIStep(0); }}>← 新しくつくる</button>
             <InterviewView data={iOut} />
           </>
         )}

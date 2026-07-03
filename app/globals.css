@@ -386,3 +386,25 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .mk-err{border-width:1.5px;}
 .rv-qs li{border-width:1.5px; border-color:var(--hairline); background:#fff;}
 .mk-cred{display:none;}
+
+/* ---- ウィザード ---- */
+.wiz-prog{display:flex; align-items:center; gap:12px; margin:10px 6px 22px;}
+.wiz-track{position:relative; flex:1; height:10px; border-radius:999px; background:#F1EAD2;}
+.wiz-fill{position:absolute; top:0; bottom:0; left:0; border-radius:999px;
+  background:linear-gradient(90deg,var(--honey),var(--matcha));
+  transition:width .55s cubic-bezier(.22,.9,.3,1);}
+.wiz-kame{position:absolute; top:50%; width:46px; height:46px; object-fit:contain;
+  transform:translate(-50%,-60%); transition:left .55s cubic-bezier(.22,.9,.3,1);
+  filter:drop-shadow(0 4px 8px rgba(69,55,35,.28)); animation:kamewalk 2.2s ease-in-out infinite;}
+@keyframes kamewalk{0%,100%{transform:translate(-50%,-60%) rotate(-4deg);}50%{transform:translate(-50%,-66%) rotate(4deg);}}
+@media(prefers-reduced-motion:reduce){.wiz-kame{animation:none;}}
+.wiz-count{font-size:12px; font-weight:900; color:var(--ink-soft); min-width:30px; text-align:right;}
+.wiz-step{animation:stepIn .38s cubic-bezier(.22,.9,.3,1);}
+@keyframes stepIn{from{opacity:0; transform:translateX(28px);}to{opacity:1; transform:none;}}
+@media(prefers-reduced-motion:reduce){.wiz-step{animation:none;}}
+.wiz-nav{display:flex; align-items:center; gap:8px; margin-top:14px;}
+.wiz-back{font-family:inherit; font-size:13.5px; font-weight:900; color:var(--ink-soft);
+  background:none; border:none; cursor:pointer; padding:14px 16px; flex-shrink:0;}
+.wiz-next{flex:1; margin-top:0;}
+.mk-go:disabled{opacity:.45;}
+.wiz-hint{text-align:center; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-top:14px;}
