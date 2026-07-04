@@ -211,9 +211,10 @@ function InterviewView({ data }) {
           {(data.miki || []).map((m, mi) => (
             <div className="tr-branch" key={mi}>
               <button className={"tr-kw" + (openKw.has(mi) ? " open" : "")} onClick={() => toggle(openKw, setOpenKw, mi)}>
-                <span className="tr-kw-dot" />
-                {m.kw}
-                <span className="tr-caret">{openKw.has(mi) ? "−" : "+"}</span>
+                <span className="tr-kw-idx">{mi + 1}</span>
+                <span className="tr-kw-t">{m.kw}</span>
+                <span className="tr-kw-n">{(m.eda || []).length}問</span>
+                <span className={"tr-chev" + (openKw.has(mi) ? " open" : "")}>›</span>
               </button>
               {openKw.has(mi) && (
                 <div className="tr-edas">
@@ -222,13 +223,17 @@ function InterviewView({ data }) {
                     return (
                       <div className="tr-eda" key={ei}>
                         <button className={"tr-q" + (openQ.has(qk) ? " open" : "")} onClick={() => toggle(openQ, setOpenQ, qk)}>
-                          <span className="tr-q-badge">Q</span>{e.q}
+                          <span className="tr-q-badge">Q{ei + 1}</span>{e.q}
                         </button>
                         {openQ.has(qk) && (
                           <div className="tr-a">
+                            <span className="tr-a-label">こたえ方</span>
                             <p>{e.a}</p>
                             {(e.why || []).map((w, wi) => (
-                              <p className="tr-why" key={wi}>{w}</p>
+                              <div className="tr-why" key={wi}>
+                                <span>↳ さらに深掘りされたら</span>
+                                <p>{w.replace(/^さらに『なぜ\?』と聞かれたら:\s*/, "").replace(/^さらに「なぜ\?」と聞かれたら:\s*/, "")}</p>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -245,6 +250,10 @@ function InterviewView({ data }) {
       <div className="sh-final">
         <img src="/kame-pen.png" alt="" />
         <div className="sh-bubble">面接は暗記じゃなくて枝分かれの準備。どの枝を選ばれても大丈夫な状態にしておこうね🐢</div>
+      </div>
+
+      <div className="sh-tools" style={{ justifyContent: "center", marginTop: 4 }}>
+        <button className="mk-btn" onClick={() => window.print()}>PDFで保存</button>
       </div>
     </div>
   );
@@ -595,7 +604,7 @@ export default function Home() {
     date: new Date(row.created_at).toLocaleDateString("ja-JP"),
   });
 
-  const activeResult = detail || out;
+  const activeResult = detail || out || iOut;
 
   const [histFilter, setHistFilter] = useState("all");
   const histFiltered = history ? history.filter((r) => histFilter === "all" || r.kind === histFilter) : null;
@@ -947,8 +956,42 @@ export default function Home() {
         </nav>
       )}
 
-      {/* ---- 印刷用 ---- */}
-      {activeResult && (
+      {/* ---- 印刷用(幹枝シート) ---- */}
+      {activeResult && activeResult.miki && (
+        <div className="mk-print">
+          <div className="pr-band">
+            <img src="/kame-mic.png" alt="" style={{ width: 46, height: 46 }} />
+            <div>
+              <div className="t">まるかめ 幹枝シート</div>
+              <div className="s">MIKI-EDA INTERVIEW SHEET</div>
+            </div>
+          </div>
+          <div className="pr-meta">設問タイプ: {activeResult.qtype} / {activeResult.date}</div>
+          <div className="pr-h">一文要約(最初に渡す地図)</div>
+          <div className="pr-box">{activeResult.ikkabun}</div>
+          <div className="pr-h">30秒回答(幹)</div>
+          <div className="pr-box">{activeResult.kaito30}</div>
+          <div className="pr-h">深掘りの枝分かれ</div>
+          {(activeResult.miki || []).map((m, mi) => (
+            <div key={mi} style={{ marginBottom: 10 }}>
+              <div className="pr-kw">枝{mi + 1}. {m.kw}</div>
+              {(m.eda || []).map((e, ei) => (
+                <div className="pr-item" key={ei} style={{ marginLeft: 12 }}>
+                  <b>Q{ei + 1}. {e.q}</b>
+                  {e.a}
+                  {(e.why || []).map((w, wi) => (
+                    <div key={wi} style={{ marginLeft: 10, color: "#8A7A5E" }}>↳ {w}</div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="pr-foot">まるかめ 幹枝シート 🐢 幹だけ渡して、深掘りは枝で返そう</div>
+        </div>
+      )}
+
+      {/* ---- 印刷用(添削) ---- */}
+      {activeResult && !activeResult.miki && (
         <div className="mk-print">
           <div className="pr-band">
             <img src="/kame-pen.png" alt="" style={{ width: 46, height: 46 }} />

@@ -629,3 +629,35 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .sec-rewrite .sh-h2 em{background:var(--honey); color:#5C4A1E;}
 .sec-lead .sh-h2 em{background:var(--ink); color:#FFFCF2;}
 .sec-qs .sh-h2 em{background:#8FA8C9; color:#fff;}
+
+/* ---- 枝分かれツリー v2 ---- */
+.tree{gap:12px;}
+.tr-kw{background:linear-gradient(135deg,#87B573,#5E8F4E); border:none; color:#fff;
+  border-radius:18px; padding:15px 16px; gap:11px;
+  box-shadow:0 2px 4px rgba(94,143,78,.2), 0 14px 30px -18px rgba(94,143,78,.55);}
+.tr-kw-idx{width:26px; height:26px; flex-shrink:0; border-radius:50%; background:rgba(255,255,255,.25);
+  color:#fff; font-size:13px; font-weight:900; display:flex; align-items:center; justify-content:center;}
+.tr-kw-t{flex:1; text-align:left; font-size:14.5px; font-weight:900; color:#fff; line-height:1.5;}
+.tr-kw-n{font-size:10.5px; font-weight:900; background:rgba(255,255,255,.22); color:#fff;
+  border-radius:999px; padding:4px 9px; flex-shrink:0;}
+.tr-chev{font-size:20px; font-weight:900; color:rgba(255,255,255,.85); transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+.tr-chev.open{transform:rotate(90deg);}
+.tr-edas{margin:10px 0 6px 12px; padding-left:18px; border-left:3px solid #CFE3C2; gap:9px;}
+.tr-eda::before{border-bottom:3px solid #CFE3C2; width:14px; left:-18px;}
+.tr-q{border-radius:16px; padding:12px 14px; box-shadow:0 1px 3px rgba(69,55,35,.05);}
+.tr-q.open{border-color:var(--matcha); background:#F4F9F0;}
+.tr-q-badge{background:var(--matcha-deep); color:#fff; padding:3px 9px;}
+.tr-a{border-left:3px solid var(--matcha); background:#fff; border-radius:0 16px 16px 0;
+  padding:13px 15px; box-shadow:0 1px 3px rgba(69,55,35,.05);}
+.tr-a-label{display:inline-block; font-size:10px; font-weight:900; letter-spacing:.16em;
+  color:var(--matcha-deep); background:var(--matcha-pale); border-radius:999px; padding:3px 10px; margin-bottom:8px;}
+.tr-a > p{font-size:13.5px; line-height:2.0;}
+.tr-why{margin-top:10px; padding:10px 12px; background:#FFF8E2; border-radius:12px; border:none;}
+.tr-why span{display:block; font-size:10.5px; font-weight:900; letter-spacing:.08em; color:#C79A1F; margin-bottom:4px;}
+.tr-why p{font-size:12.5px; line-height:1.9; color:var(--ink);}
+
+/* 印刷: 幹枝用 */
+@media print{
+  .pr-kw{font-size:12.5px; font-weight:900; color:#5E8F4E; background:#EAF3E2; display:inline-block;
+    border-radius:999px; padding:3px 13px; margin:8px 0 4px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+}
