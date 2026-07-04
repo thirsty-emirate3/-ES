@@ -618,3 +618,14 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 
 /* 面接質問も拾い読みしやすく */
 .rv-qs li{font-weight:700; font-size:13px;}
+
+/* ---- 見出し強化 v3: バッジ+大型タイトル ---- */
+.sh-h2{flex-direction:row; align-items:center; gap:10px; font-size:21px; margin-bottom:18px;
+  padding-bottom:12px; border-bottom:2px solid #F4EEDC;}
+.sh-h2 em{font-size:10.5px; letter-spacing:.14em; color:#fff; background:#BFB294;
+  border-radius:8px; padding:6px 10px; line-height:1; flex-shrink:0;}
+.sec-good .sh-h2 em{background:var(--matcha-deep); color:#fff;}
+.sec-warn .sh-h2 em{background:var(--shu); color:#fff;}
+.sec-rewrite .sh-h2 em{background:var(--honey); color:#5C4A1E;}
+.sec-lead .sh-h2 em{background:var(--ink); color:#FFFCF2;}
+.sec-qs .sh-h2 em{background:#8FA8C9; color:#fff;}
