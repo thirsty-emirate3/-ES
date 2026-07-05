@@ -2,19 +2,19 @@ import "./globals.css";
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://es-henna-three.vercel.app"),
-  title: "まるかめ ESレビューシート | あなたのESに、まるかめの赤ペンを。",
-  description: "就活ESをAIまるかめが優しく具体的に添削。良いところを褒めて、気になる点は「なぜ」まで指摘。修正版と面接想定質問つき。初回1回無料。",
+  title: "まるかめ ESレビューシート | 面接、全部話すと落ちます。",
+  description: "ESを貼るだけで、面接用の「30秒回答」と「深掘り想定問答」に変換。面接落ち0の幹枝テクニックをAIで。ES添削も。初回1回無料。",
   openGraph: {
-    title: "まるかめ ESレビューシート",
-    description: "あなたのESに、まるかめの赤ペンを。褒めて、直して、面接まで見すえるAI添削。初回1回無料🐢",
-    images: ["/og.png"],
+    title: "まるかめ 幹枝シート | 面接、全部話すと落ちます。",
+    description: "ESを貼るだけで「30秒回答」と「深掘り想定問答」に変換。面接落ち0の幹枝テクニックをAIで🐢 初回1回無料",
+    images: ["/og-interview.png"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "まるかめ ESレビューシート",
-    description: "あなたのESに、まるかめの赤ペンを。初回1回無料🐢",
-    images: ["/og.png"],
+    title: "まるかめ 幹枝シート | 面接、全部話すと落ちます。",
+    description: "ESを貼るだけで面接想定問答に変換。初回1回無料🐢",
+    images: ["/og-interview.png"],
   },
   appleWebApp: { capable: true, title: "まるかめES", statusBarStyle: "default" },
 };
