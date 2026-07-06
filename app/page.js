@@ -156,11 +156,11 @@ const FOL_BLOBS = [
 // 幹の中心線(下から上へ)と、その途中から生える枝の定義
 const TRUNK = { x0: 210, y0: 328, cx: 203, cy: 240, x1: 214, y1: 122, w0: 34, w1: 12 };
 const BRANCH_DEFS = [
-  { t: 0.28, ex: 362, ey: 246, labelPos: "above" },
-  { t: 0.42, ex: 58,  ey: 228, labelPos: "above" },
-  { t: 0.60, ex: 356, ey: 102, labelPos: "below" },
-  { t: 0.74, ex: 70,  ey: 82,  labelPos: "below" },
-  { t: 0.84, ex: 88, ey: 44,  labelPos: "below" },
+  { t: 0.28, ex: 366, ey: 250, labelPos: "above" },
+  { t: 0.42, ex: 54,  ey: 252, labelPos: "above" },
+  { t: 0.60, ex: 368, ey: 128, labelPos: "below" },
+  { t: 0.72, ex: 48,  ey: 132, labelPos: "below" },
+  { t: 0.86, ex: 118, ey: 36,  labelPos: "left" },
 ];
 const trunkPt = (t) => {
   const mt = 1 - t;
@@ -282,8 +282,12 @@ function TreeMap({ miki, openKw, onPick }) {
           const on = openKw.has(b.i);
           const label = b.m.kw.length > 8 ? b.m.kw.slice(0, 8) + "…" : b.m.kw;
           const wpx = label.length * 14.5 + 30;
-          const px = Math.min(Math.max(b.ex - wpx / 2, 6), 414 - wpx);
-          const ry = b.labelPos === "above" ? b.ey - 58 : b.ey + 26;
+          const px = b.labelPos === "left"
+            ? 6
+            : Math.min(Math.max(b.ex - wpx / 2, 6), 414 - wpx);
+          const ry = b.labelPos === "above" ? b.ey - 58
+            : b.labelPos === "left" ? b.ey - 17
+            : b.ey + 26;
           return (
             <g key={"f" + b.i} className="tm-fol" style={{ "--d": `${0.65 + b.i * 0.13}s` }} onClick={() => onPick(b.i)}>
               {FOL_BLOBS.map(([ox, oy, r], fi) => (
