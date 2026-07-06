@@ -127,8 +127,7 @@ function MikiEdaDiagram() {
   );
 }
 
-/* ---- 幹枝の木 v2: テーパー描画の2層ツリー ---- */
-// 二次ベジェに沿って幅が先細るポリゴンを生成(枝を「面」として描く)
+/* ---- 幹枝の木 v3: 左右に広がる樹形 ---- */
 function taperPath(x0, y0, cx, cy, x1, y1, w0, w1, steps = 12) {
   const pts = [];
   for (let i = 0; i <= steps; i++) {
@@ -149,42 +148,32 @@ function taperPath(x0, y0, cx, cy, x1, y1, w0, w1, steps = 12) {
 }
 
 const FOL = ["#4E7A3E", "#699C51", "#8DBE6F"];
-const FOL_BLOBS = [[-15, -5, 14], [11, -9, 12], [-2, -17, 13], [-6, 4, 10], [15, 3, 9], [3, -6, 11]];
+const FOL_BLOBS = [[-18, -4, 16], [13, -8, 14], [-3, -19, 15], [-8, 6, 12], [17, 4, 11], [4, -7, 13]];
+// 左右交互に広がるスロット(最大5枝)
+const SLOTS = [
+  { ex: 352, ey: 120, ay: 196 },
+  { ex: 68,  ey: 138, ay: 190 },
+  { ex: 360, ey: 232, ay: 212 },
+  { ex: 60,  ey: 248, ay: 206 },
+  { ex: 300, ey: 58,  ay: 182 },
+];
 
-function TreeMap({ miki, openKw, openQ, onPickKw, onPickQ }) {
+function TreeMap({ miki, openKw, onPick }) {
   const n = Math.min((miki || []).length, 5);
   if (!n) return null;
-  const crownX = 128, crownY = 158;
-  const start = -Math.PI * 0.46, spread = Math.PI * 0.56;
-
   const branches = miki.slice(0, n).map((m, i) => {
-    const a = start + (n === 1 ? spread / 2 : (spread * i) / (n - 1));
-    const jitter = (i % 2 === 0 ? 1 : -1) * 0.06;
-    const r = 116 + (i % 2) * 16;
-    const ax = crownX - 6 + (i % 3) * 4;
-    const ay = crownY + 14 - i * 5;
-    const ex = ax + Math.cos(a + jitter) * r * 1.38;
-    const ey = ay + Math.sin(a + jitter) * r;
-    const mx = ax + Math.cos(a) * r * 0.5, my = ay + Math.sin(a) * r * 0.48;
-    const bend = (i % 2 === 0 ? 1 : -1) * 26;
-    const cx2 = mx - Math.sin(a) * bend, cy2 = my + Math.cos(a) * bend;
-    // 小枝(第2層): 実=質問
-    const twigs = (m.eda || []).slice(0, 3).map((e, ei) => {
-      const ta = a + (ei - 1) * 0.52 + jitter * 2;
-      const tr = 50 + (ei % 2) * 12;
-      const qx = ex + Math.cos(ta) * tr * 1.15;
-      const qy = ey + Math.sin(ta) * tr;
-      const tcx = ex + Math.cos(ta) * tr * 0.5 - Math.sin(ta) * 8;
-      const tcy = ey + Math.sin(ta) * tr * 0.5 + Math.cos(ta) * 8;
-      return { e, ei, qx, qy, tcx, tcy };
-    });
-    return { m, i, ax, ay, ex, ey, cx2, cy2, twigs };
+    const sl = SLOTS[i];
+    const side = sl.ex > 210 ? 1 : -1;
+    const ax = 210 + side * 7;
+    const cx2 = (ax + sl.ex) / 2 + side * 8;
+    const cy2 = Math.min(sl.ay, sl.ey) - 30;
+    return { m, i, ax, ay: sl.ay, ex: sl.ex, ey: sl.ey, cx2, cy2 };
   });
 
   return (
-    <svg viewBox="0 0 420 360" className="tmap" aria-label="深掘りの枝分かれマップ">
+    <svg viewBox="0 0 420 350" className="tmap" aria-label="深掘りの枝分かれマップ">
       <defs>
-        <radialGradient id="tm-light" cx="50%" cy="38%" r="62%">
+        <radialGradient id="tm-light" cx="50%" cy="36%" r="60%">
           <stop offset="0%" stopColor="#FFFDF0" />
           <stop offset="100%" stopColor="#FFFDF0" stopOpacity="0" />
         </radialGradient>
@@ -199,68 +188,54 @@ function TreeMap({ miki, openKw, openQ, onPickKw, onPickQ }) {
         </linearGradient>
       </defs>
 
-      <circle cx="200" cy="150" r="150" fill="url(#tm-light)" />
-      <ellipse cx="120" cy="322" rx="98" ry="15" fill="url(#tm-ground)" />
+      <circle cx="210" cy="140" r="150" fill="url(#tm-light)" />
+      <ellipse cx="210" cy="322" rx="128" ry="15" fill="url(#tm-ground)" />
 
-      {/* 幹(先細り+根張り+陰影) */}
-      <path className="tm-grow" d="M 88 326 Q 96 316 100 322 C 102 268 110 210 122 156 L 136 158 C 138 212 142 270 142 322 Q 148 314 156 324 L 150 330 L 94 330 Z" fill="url(#tm-bark)" />
-      <path className="tm-grow" d="M 130 166 C 134 216 138 268 138 320 L 142 322 C 142 270 138 212 136 160 Z" fill="#4A3119" opacity=".45" />
-      <path className="tm-grow" d="M 104 310 C 106 262 112 214 122 168" fill="none" stroke="#A78458" strokeWidth="2.5" strokeLinecap="round" opacity=".6" />
+      {/* 幹: 中央にどっしり */}
+      <path className="tm-grow" d="M 190 326 Q 198 316 202 322 C 202 272 205 222 207 172 L 219 172 C 221 222 224 272 226 322 Q 230 314 238 324 L 232 330 L 194 330 Z" fill="url(#tm-bark)" />
+      <path className="tm-grow" d="M 216 176 C 218 224 221 272 222 320 L 226 322 C 224 272 221 222 219 174 Z" fill="#4A3119" opacity=".45" />
+      <path className="tm-grow" d="M 205 312 C 205 266 207 220 209 178" fill="none" stroke="#A78458" strokeWidth="2.5" strokeLinecap="round" opacity=".55" />
 
       {/* 草と花 */}
-      {[[46, 320], [78, 328], [176, 326], [204, 318]].map(([gx, gy], gi) => (
+      {[[112, 320], [150, 328], [268, 326], [306, 318]].map(([gx, gy], gi) => (
         <path key={gi} d={`M ${gx} ${gy} q 2 -9 4 0 M ${gx + 5} ${gy} q 2 -7 4 0`} stroke="#7FAE6B" strokeWidth="2" fill="none" strokeLinecap="round" />
       ))}
-      <circle cx="62" cy="317" r="3" fill="#F3C64F" /><circle cx="190" cy="315" r="3" fill="#EF9086" />
+      <circle cx="132" cy="316" r="3" fill="#F3C64F" /><circle cx="288" cy="314" r="3" fill="#EF9086" />
 
       <g className="tmap-sway">
-        {branches.map((b) => (
-          <g key={b.i}>
-            {/* 主枝(面) */}
-            <path className="tm-b" style={{ "--d": `${0.4 + b.i * 0.14}s` }}
-              d={taperPath(b.ax, b.ay, b.cx2, b.cy2, b.ex, b.ey, 12, 3.5)} fill="url(#tm-bark)" />
+        {/* てっぺんの茂み(樹冠) */}
+        <g className="tm-fol tm-crown" style={{ "--d": ".5s" }}>
+          {[[-24, -6, 19], [18, -10, 17], [-2, -24, 18], [-12, 8, 14], [22, 6, 13], [4, -8, 16]].map(([ox, oy, r], fi) => (
+            <circle key={fi} cx={210 + ox} cy={152 + oy} r={r} fill={FOL[fi % 3]} />
+          ))}
+          <circle cx="198" cy="132" r="6" fill="#B9DA98" opacity=".9" />
+          <circle cx="224" cy="146" r="4.5" fill="#B9DA98" opacity=".7" />
+        </g>
 
-            {/* 第2層: 小枝と実(開いた枝だけ) */}
-            {openKw.has(b.i) && b.twigs.map((t) => {
-              const qk = b.i + "-" + t.ei;
-              const on = openQ.has(qk);
-              return (
-                <g key={qk} className="tm-twig" style={{ transformOrigin: `${b.ex}px ${b.ey}px` }}
-                  onClick={(ev) => { ev.stopPropagation(); onPickQ(b.i, t.ei); }}>
-                  <path d={taperPath(b.ex, b.ey, t.tcx, t.tcy, t.qx, t.qy, 3.5, 1.4)} fill="#755334" />
-                  <circle cx={t.qx} cy={t.qy} r={on ? 11 : 9.5} fill={on ? "#D98A2B" : "#E8A93C"} stroke="#FFFCF2" strokeWidth="2.5" />
-                  <circle cx={t.qx - 3} cy={t.qy - 3.5} r="2.6" fill="#F6CE85" />
-                  <text x={t.qx} y={t.qy + 3.5} textAnchor="middle" className="tm-qt">Q{t.ei + 1}</text>
-                </g>
-              );
-            })}
-
-            {/* 葉の茂み(キーワード) */}
-            <g className="tm-fol" style={{ "--d": `${0.62 + b.i * 0.14}s` }} onClick={() => onPickKw(b.i)}>
-              {FOL_BLOBS.map(([ox, oy, r], fi) => (
-                <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (openKw.has(b.i) ? 1.5 : 0)}
-                  fill={FOL[fi % 3]} />
-              ))}
-              <circle cx={b.ex - 8} cy={b.ey - 13} r="5" fill="#B9DA98" opacity=".9" />
-              <circle cx={b.ex + 9} cy={b.ey - 4} r="3.6" fill="#B9DA98" opacity=".7" />
-              {(() => {
-                const label = b.m.kw.length > 8 ? b.m.kw.slice(0, 8) + "…" : b.m.kw;
-                const wpx = label.length * 12 + 24;
-                const px = Math.min(Math.max(b.ex - wpx / 2, 6), 414 - wpx);
-                const on = openKw.has(b.i);
-                return (
-                  <g>
-                    <rect x={px} y={b.ey + 20} width={wpx} height="27" rx="13.5" className={"tmap-pill" + (on ? " on" : "")} />
-                    <text x={px + wpx / 2} y={b.ey + 38} textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>{label}</text>
-                  </g>
-                );
-              })()}
+        {branches.map((b) => {
+          const on = openKw.has(b.i);
+          const label = b.m.kw.length > 8 ? b.m.kw.slice(0, 8) + "…" : b.m.kw;
+          const wpx = label.length * 14.5 + 30;
+          const px = Math.min(Math.max(b.ex - wpx / 2, 6), 414 - wpx);
+          return (
+            <g key={b.i}>
+              <path className="tm-b" style={{ "--d": `${0.35 + b.i * 0.14}s` }}
+                d={taperPath(b.ax, b.ay, b.cx2, b.cy2, b.ex, b.ey, 13, 4)} fill="url(#tm-bark)" />
+              <g className="tm-fol" style={{ "--d": `${0.6 + b.i * 0.14}s` }} onClick={() => onPick(b.i)}>
+                {FOL_BLOBS.map(([ox, oy, r], fi) => (
+                  <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
+                ))}
+                <circle cx={b.ex - 9} cy={b.ey - 15} r="5.5" fill="#B9DA98" opacity=".9" />
+                <circle cx={b.ex + 10} cy={b.ey - 5} r="4" fill="#B9DA98" opacity=".7" />
+                <rect x={px} y={b.ey + 24} width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
+                <text x={px + wpx / 2} y={b.ey + 47} textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>{label}</text>
+              </g>
             </g>
-          </g>
-        ))}
+          );
+        })}
       </g>
 
-      <image href="/kame-walk.png" x="18" y="278" width="56" height="56" className="tmap-kame" />
+      <image href="/kame-walk.png" x="252" y="252" width="76" height="76" className="tmap-kame" />
     </svg>
   );
 }
@@ -309,15 +284,10 @@ function InterviewView({ data }) {
     setFn(next);
   };
   const pick = (i) => {
+    const opening = !openKw.has(i);
     toggle(openKw, setOpenKw, i);
-  };
-  const pickQ = (mi, ei) => {
-    const qk = mi + "-" + ei;
-    if (!openQ.has(qk)) {
-      const next = new Set(openQ); next.add(qk); setOpenQ(next);
-      setTimeout(() => document.getElementById("q-" + qk)?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
-    } else {
-      document.getElementById("q-" + qk)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (opening) {
+      setTimeout(() => document.getElementById("branch-" + i)?.scrollIntoView({ behavior: "smooth", block: "center" }), 120);
     }
   };
   const copy = async (text, key) => {
@@ -356,8 +326,8 @@ function InterviewView({ data }) {
 
       <div className="sh-sheet">
         <h3 className="sh-h2"><em>MIKIEDA 03</em>深掘りの枝分かれ</h3>
-        <TreeMap miki={data.miki} openKw={openKw} openQ={openQ} onPickKw={pick} onPickQ={pickQ} />
-        <p className="tr-hint" style={{ marginBottom: 14 }}>葉をタップすると小枝がのびて、実(Q)をタップするとこたえがひらくよ</p>
+        <TreeMap miki={data.miki} openKw={openKw} onPick={pick} />
+        <p className="tr-hint" style={{ marginBottom: 14 }}>葉っぱをタップすると、その枝の想定問答がひらくよ</p>
         <div className="tree">
           {(data.miki || []).map((m, mi) => (
             <div className="tr-branch" key={mi} id={"branch-" + mi}>

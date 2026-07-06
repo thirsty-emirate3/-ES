@@ -704,3 +704,10 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 @media(prefers-reduced-motion:reduce){
   .tm-grow,.tm-b,.tm-fol,.tm-twig{animation:none; opacity:1; transform:none;}
 }
+
+/* ---- 木 v3: ラベル大きく可愛く ---- */
+.tmap{max-width:480px;}
+.tmap-pill{stroke-width:2; filter:drop-shadow(0 3px 5px rgba(69,55,35,.16));}
+.tmap-label{font-size:14.5px;}
+.tm-crown{cursor:default;}
+.tmap-kame{animation:tkame 2.2s ease-in-out infinite;}
