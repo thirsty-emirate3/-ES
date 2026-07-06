@@ -723,3 +723,18 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .tr-why span{font-size:11px; margin-bottom:5px;}
 .tr-why p{font-size:13px; line-height:1.9;}
 .tr-edas{gap:10px;}
+
+/* ---- 質問3段ハシゴ(Why責め) ---- */
+.lad{margin:10px 0 6px 12px; padding-left:16px; border-left:3px solid #CFE3C2;
+  display:flex; flex-direction:column; gap:4px; animation:openIn .28s ease;}
+.lad-q{border-radius:16px; padding:13px 15px;}
+.lad-q em{display:block; font-style:normal; font-size:10.5px; font-weight:900; letter-spacing:.12em; margin-bottom:5px;}
+.lad-q p{font-size:14.5px; font-weight:900; line-height:1.85; color:var(--ink);}
+.lad-q.lv1{background:#fff; box-shadow:0 1px 3px rgba(69,55,35,.06);}
+.lad-q.lv1 em{color:var(--matcha-deep);}
+.lad-q.lv2{background:var(--matcha-pale); margin-left:14px;}
+.lad-q.lv2 em{color:var(--matcha-deep);}
+.lad-q.lv3{background:#FDECE9; margin-left:28px;}
+.lad-q.lv3 em{color:var(--shu);}
+.lad-q.lv3 p{color:#7A2C23;}
+.lad-arrow{font-size:11px; font-weight:900; color:#B9AD90; padding:4px 0 4px 20px;}
