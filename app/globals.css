@@ -745,3 +745,11 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .lad-q.q{background:#fff; box-shadow:0 1px 3px rgba(69,55,35,.06);}
 .lad-q.q em{color:var(--matcha-deep);}
 .lad-q.q p{font-weight:700;}
+
+/* ---- 質問グループ ---- */
+.qgrp{display:flex; flex-direction:column; gap:5px; margin-bottom:10px;}
+.qgrp:last-child{margin-bottom:2px;}
+.lad-q.sub{padding:11px 14px;}
+.lad-q.sub p{font-size:13px; font-weight:700;}
+.lad-q.lv2.sub{margin-left:16px;}
+.lad-q.lv3.sub{margin-left:32px;}

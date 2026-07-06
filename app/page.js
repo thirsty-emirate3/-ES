@@ -160,7 +160,7 @@ const BRANCH_DEFS = [
   { t: 0.42, ex: 58,  ey: 228, labelPos: "above" },
   { t: 0.60, ex: 356, ey: 102, labelPos: "below" },
   { t: 0.74, ex: 70,  ey: 82,  labelPos: "below" },
-  { t: 0.86, ex: 330, ey: 44,  labelPos: "below" },
+  { t: 0.84, ex: 88, ey: 44,  labelPos: "below" },
 ];
 const trunkPt = (t) => {
   const mt = 1 - t;
@@ -170,6 +170,13 @@ const trunkPt = (t) => {
     w: TRUNK.w0 + (TRUNK.w1 - TRUNK.w0) * t,
   };
 };
+
+// 旧フォーマット(chain/eda/文字列qs)も新構造に吸収
+function normQs(m) {
+  if (Array.isArray(m.qs) && m.qs.length && typeof m.qs[0] === "object") return m.qs;
+  const flat = m.qs || m.chain || (m.eda || []).map((e) => e.q) || [];
+  return flat.map((q) => ({ q, whys: [] }));
+}
 
 function TreeMap({ miki, openKw, onPick }) {
   const n = Math.min((miki || []).length, 5);
@@ -241,26 +248,28 @@ function TreeMap({ miki, openKw, onPick }) {
           const uni = (miki || [])[5];
           const on = openKw.has(5);
           const CROWN = [
-            [-46, 2, 24], [46, 4, 23], [-26, -20, 25], [28, -18, 24],
-            [0, -32, 26], [-8, 6, 24], [16, 8, 22], [-40, -14, 18],
-            [40, -12, 18], [8, -26, 22], [-18, 12, 19], [26, -30, 16],
+            [-62, 6, 26], [60, 8, 25], [-38, -18, 28], [40, -16, 27],
+            [0, -34, 30], [-10, 10, 27], [22, 12, 24], [-56, -8, 20],
+            [56, -6, 20], [10, -28, 26], [-24, 16, 22], [30, -30, 20],
+            [-44, -28, 18], [46, -26, 17], [0, 18, 24], [-70, 12, 15], [70, 14, 14],
           ];
           return (
             <g className={"tm-fol tm-crown" + (uni ? " clickable" : "")} style={{ "--d": ".55s" }}
               onClick={uni ? () => onPick(5) : undefined}>
               {CROWN.map(([ox, oy, r], fi) => (
-                <circle key={fi} cx={213 + ox} cy={118 + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
+                <circle key={fi} cx={213 + ox} cy={112 + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
               ))}
-              <circle cx="192" cy="86" r="7" fill="#B9DA98" opacity=".9" />
-              <circle cx="238" cy="102" r="5" fill="#B9DA98" opacity=".75" />
-              <circle cx="172" cy="112" r="4.5" fill="#B9DA98" opacity=".6" />
+              <circle cx="186" cy="82" r="8" fill="#B9DA98" opacity=".9" />
+              <circle cx="244" cy="98" r="6" fill="#B9DA98" opacity=".75" />
+              <circle cx="160" cy="110" r="5" fill="#B9DA98" opacity=".6" />
+              <circle cx="222" cy="76" r="4.5" fill="#B9DA98" opacity=".7" />
               {uni && (() => {
                 const wpx = 4 * 14.5 + 30;
                 const px = 213 - wpx / 2;
                 return (
                   <g>
-                    <rect x={px} y="42" width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
-                    <text x="213" y="65" textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>共通質問</text>
+                    <rect x={px} y="30" width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
+                    <text x="213" y="53" textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>共通質問</text>
                   </g>
                 );
               })()}
@@ -278,7 +287,7 @@ function TreeMap({ miki, openKw, onPick }) {
           return (
             <g key={"f" + b.i} className="tm-fol" style={{ "--d": `${0.65 + b.i * 0.13}s` }} onClick={() => onPick(b.i)}>
               {FOL_BLOBS.map(([ox, oy, r], fi) => (
-                <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
+                <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (b.ey < 160 ? 2 : 0) + (on ? 2 : 0)} fill={FOL[fi % 3]} />
               ))}
               <circle cx={b.ex - 9} cy={b.ey - 15} r="5.5" fill="#B9DA98" opacity=".9" />
               <circle cx={b.ex + 10} cy={b.ey - 5} r="4" fill="#B9DA98" opacity=".7" />
@@ -393,26 +402,20 @@ function InterviewView({ data }) {
               </button>
               {openKw.has(mi) && (
                 <div className="lad">
-                  {(m.qs || m.chain || (m.eda || []).map((e) => e.q)).map((q, qi) => (
-                    <div className="lad-q q" key={"q" + qi}>
-                      <em>Q{qi + 1}</em>
-                      <p>{q}</p>
-                    </div>
-                  ))}
-                  {(m.whys || []).length > 0 && (
-                    <>
-                      <div className="lad-arrow">↓ あなたの答えに対して、ここからWhy責め</div>
-                      {(m.whys || []).map((w, wi) => (
-                        <div key={"w" + wi}>
-                          <div className={"lad-q lv" + (wi + 2)}>
-                            <em>{wi === 0 ? "なぜ?" : "さらになぜ?"}</em>
-                            <p>{w}</p>
-                          </div>
-                          {wi === 0 && <div className="lad-arrow">↓</div>}
+                  {normQs(m).map((qo, qi) => (
+                    <div className="qgrp" key={qi}>
+                      <div className="lad-q q">
+                        <em>Q{qi + 1}</em>
+                        <p>{qo.q}</p>
+                      </div>
+                      {(qo.whys || []).map((w, wi) => (
+                        <div className={"lad-q sub lv" + (wi + 2)} key={wi}>
+                          <em>{wi === 0 ? "↓ なぜ?" : "↓ さらになぜ?"}</em>
+                          <p>{w}</p>
                         </div>
                       ))}
-                    </>
-                  )}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -1152,14 +1155,14 @@ export default function Home() {
           {(activeResult.miki || []).map((m, mi) => (
             <div key={mi} style={{ marginBottom: 10 }}>
               <div className="pr-kw">枝{mi + 1}. {m.kw}</div>
-              {(m.qs || m.chain || (m.eda || []).map((e) => e.q)).map((q, ei) => (
-                <div className="pr-item" key={"q" + ei} style={{ marginLeft: 12 }}>
-                  <b>Q{ei + 1}. {q}</b>
-                </div>
-              ))}
-              {(m.whys || []).map((w, wi) => (
-                <div className="pr-item" key={"w" + wi} style={{ marginLeft: 24 + wi * 14, color: "#B0421F" }}>
-                  <b>{wi === 0 ? "なぜ?: " : "さらに: "}{w}</b>
+              {normQs(m).map((qo, ei) => (
+                <div key={ei}>
+                  <div className="pr-item" style={{ marginLeft: 12 }}><b>Q{ei + 1}. {qo.q}</b></div>
+                  {(qo.whys || []).map((w, wi) => (
+                    <div className="pr-item" key={wi} style={{ marginLeft: 26 + wi * 14, color: "#B0421F" }}>
+                      ↓ {w}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
