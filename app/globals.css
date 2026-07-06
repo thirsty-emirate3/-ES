@@ -711,3 +711,15 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .tmap-label{font-size:14.5px;}
 .tm-crown{cursor:default;}
 .tmap-kame{animation:tkame 2.2s ease-in-out infinite;}
+
+/* ---- 深掘りリストの文字を整える ---- */
+.tr-kw-t{font-size:15px;}
+.tr-q{font-size:14px; color:var(--ink); padding:14px 16px; gap:10px; line-height:1.75;}
+.tr-q-badge{font-size:11px; padding:4px 10px; margin-top:1px;}
+.tr-a{padding:15px 16px;}
+.tr-a > p{font-size:14px; line-height:2.0; color:var(--ink);}
+.tr-a-label{font-size:10.5px; margin-bottom:9px;}
+.tr-why{margin-top:11px; padding:11px 13px;}
+.tr-why span{font-size:11px; margin-bottom:5px;}
+.tr-why p{font-size:13px; line-height:1.9;}
+.tr-edas{gap:10px;}

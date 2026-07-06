@@ -127,8 +127,8 @@ function MikiEdaDiagram() {
   );
 }
 
-/* ---- 幹枝の木 v3: 左右に広がる樹形 ---- */
-function taperPath(x0, y0, cx, cy, x1, y1, w0, w1, steps = 12) {
+/* ---- 幹枝の木 v4: 幹を登りながら順に分岐する自然樹形 ---- */
+function taperPath(x0, y0, cx, cy, x1, y1, w0, w1, steps = 14) {
   const pts = [];
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
@@ -149,29 +149,38 @@ function taperPath(x0, y0, cx, cy, x1, y1, w0, w1, steps = 12) {
 
 const FOL = ["#4E7A3E", "#699C51", "#8DBE6F"];
 const FOL_BLOBS = [[-18, -4, 16], [13, -8, 14], [-3, -19, 15], [-8, 6, 12], [17, 4, 11], [4, -7, 13]];
-// 左右交互に広がるスロット(最大5枝)
-const SLOTS = [
-  { ex: 352, ey: 120, ay: 196 },
-  { ex: 68,  ey: 138, ay: 190 },
-  { ex: 360, ey: 232, ay: 212 },
-  { ex: 60,  ey: 248, ay: 206 },
-  { ex: 300, ey: 58,  ay: 182 },
+
+// 幹の中心線(下から上へ)と、その途中から生える枝の定義
+const TRUNK = { x0: 210, y0: 328, cx: 203, cy: 242, x1: 215, y1: 146, w0: 34, w1: 13 };
+const BRANCH_DEFS = [
+  { t: 0.30, ex: 358, ey: 234, labelPos: "above" },
+  { t: 0.44, ex: 62,  ey: 218, labelPos: "above" },
+  { t: 0.60, ex: 352, ey: 110, labelPos: "below" },
+  { t: 0.74, ex: 76,  ey: 92,  labelPos: "below" },
+  { t: 0.86, ex: 302, ey: 52,  labelPos: "below" },
 ];
+const trunkPt = (t) => {
+  const mt = 1 - t;
+  return {
+    x: mt * mt * TRUNK.x0 + 2 * mt * t * TRUNK.cx + t * t * TRUNK.x1,
+    y: mt * mt * TRUNK.y0 + 2 * mt * t * TRUNK.cy + t * t * TRUNK.y1,
+    w: TRUNK.w0 + (TRUNK.w1 - TRUNK.w0) * t,
+  };
+};
 
 function TreeMap({ miki, openKw, onPick }) {
   const n = Math.min((miki || []).length, 5);
   if (!n) return null;
   const branches = miki.slice(0, n).map((m, i) => {
-    const sl = SLOTS[i];
-    const side = sl.ex > 210 ? 1 : -1;
-    const ax = 210 + side * 7;
-    const cx2 = (ax + sl.ex) / 2 + side * 8;
-    const cy2 = Math.min(sl.ay, sl.ey) - 30;
-    return { m, i, ax, ay: sl.ay, ex: sl.ex, ey: sl.ey, cx2, cy2 };
+    const def = BRANCH_DEFS[i];
+    const at = trunkPt(def.t);
+    const cxq = at.x + (def.ex - at.x) * 0.42;
+    const cyq = at.y - Math.abs(def.ex - at.x) * 0.3 - 6;
+    return { m, i, ax: at.x, ay: at.y, w0: at.w * 0.52 + 2, ex: def.ex, ey: def.ey, cxq, cyq, labelPos: def.labelPos };
   });
 
   return (
-    <svg viewBox="0 0 420 350" className="tmap" aria-label="深掘りの枝分かれマップ">
+    <svg viewBox="0 0 420 360" className="tmap" aria-label="深掘りの枝分かれマップ">
       <defs>
         <radialGradient id="tm-light" cx="50%" cy="36%" r="60%">
           <stop offset="0%" stopColor="#FFFDF0" />
@@ -189,53 +198,60 @@ function TreeMap({ miki, openKw, onPick }) {
       </defs>
 
       <circle cx="210" cy="140" r="150" fill="url(#tm-light)" />
-      <ellipse cx="210" cy="322" rx="128" ry="15" fill="url(#tm-ground)" />
-
-      {/* 幹: 中央にどっしり */}
-      <path className="tm-grow" d="M 190 326 Q 198 316 202 322 C 202 272 205 222 207 172 L 219 172 C 221 222 224 272 226 322 Q 230 314 238 324 L 232 330 L 194 330 Z" fill="url(#tm-bark)" />
-      <path className="tm-grow" d="M 216 176 C 218 224 221 272 222 320 L 226 322 C 224 272 221 222 219 174 Z" fill="#4A3119" opacity=".45" />
-      <path className="tm-grow" d="M 205 312 C 205 266 207 220 209 178" fill="none" stroke="#A78458" strokeWidth="2.5" strokeLinecap="round" opacity=".55" />
-
-      {/* 草と花 */}
+      <ellipse cx="210" cy="324" rx="128" ry="15" fill="url(#tm-ground)" />
       {[[112, 320], [150, 328], [268, 326], [306, 318]].map(([gx, gy], gi) => (
         <path key={gi} d={`M ${gx} ${gy} q 2 -9 4 0 M ${gx + 5} ${gy} q 2 -7 4 0`} stroke="#7FAE6B" strokeWidth="2" fill="none" strokeLinecap="round" />
       ))}
       <circle cx="132" cy="316" r="3" fill="#F3C64F" /><circle cx="288" cy="314" r="3" fill="#EF9086" />
 
-      <g className="tmap-sway">
-        {/* てっぺんの茂み(樹冠) */}
-        <g className="tm-fol tm-crown" style={{ "--d": ".5s" }}>
-          {[[-24, -6, 19], [18, -10, 17], [-2, -24, 18], [-12, 8, 14], [22, 6, 13], [4, -8, 16]].map(([ox, oy, r], fi) => (
-            <circle key={fi} cx={210 + ox} cy={152 + oy} r={r} fill={FOL[fi % 3]} />
-          ))}
-          <circle cx="198" cy="132" r="6" fill="#B9DA98" opacity=".9" />
-          <circle cx="224" cy="146" r="4.5" fill="#B9DA98" opacity=".7" />
+      {/* 木全体が根元を支点でそよぐ */}
+      <g className="tmap-sway" style={{ transformOrigin: "210px 326px" }}>
+
+        {/* ① 枝(幹より先に描く=付け根が幹の下に隠れて自然に繋がる) */}
+        {branches.map((b) => (
+          <path key={"b" + b.i} className="tm-b" style={{ "--d": `${0.4 + b.i * 0.13}s` }}
+            d={taperPath(b.ax, b.ay, b.cxq, b.cyq, b.ex, b.ey, b.w0, 4)} fill="url(#tm-bark)" />
+        ))}
+
+        {/* ② 幹(枝の付け根の上に重なる) */}
+        <g className="tm-grow">
+          <path d={taperPath(TRUNK.x0, TRUNK.y0, TRUNK.cx, TRUNK.cy, TRUNK.x1, TRUNK.y1, TRUNK.w0, TRUNK.w1)} fill="url(#tm-bark)" />
+          <path d="M 188 330 Q 198 314 205 324 L 216 324 Q 224 314 234 330 Z" fill="url(#tm-bark)" />
+          <path d={taperPath(TRUNK.x0 + 7, TRUNK.y0, TRUNK.cx + 8, TRUNK.cy, TRUNK.x1 + 4, TRUNK.y1 + 4, 8, 3)} fill="#4A3119" opacity=".4" />
+          <path d="M 202 310 C 200 264 203 216 208 172" fill="none" stroke="#A78458" strokeWidth="2.5" strokeLinecap="round" opacity=".55" />
         </g>
 
+        {/* ③ 樹冠(幹の先端を包む) */}
+        <g className="tm-fol tm-crown" style={{ "--d": ".55s" }}>
+          {[[-24, -6, 19], [18, -10, 17], [-2, -24, 18], [-12, 8, 14], [22, 6, 13], [4, -8, 16]].map(([ox, oy, r], fi) => (
+            <circle key={fi} cx={215 + ox} cy={140 + oy} r={r} fill={FOL[fi % 3]} />
+          ))}
+          <circle cx="203" cy="120" r="6" fill="#B9DA98" opacity=".9" />
+          <circle cx="229" cy="134" r="4.5" fill="#B9DA98" opacity=".7" />
+        </g>
+
+        {/* ④ 葉ふさとラベル */}
         {branches.map((b) => {
           const on = openKw.has(b.i);
           const label = b.m.kw.length > 8 ? b.m.kw.slice(0, 8) + "…" : b.m.kw;
           const wpx = label.length * 14.5 + 30;
           const px = Math.min(Math.max(b.ex - wpx / 2, 6), 414 - wpx);
+          const ry = b.labelPos === "above" ? b.ey - 58 : b.ey + 26;
           return (
-            <g key={b.i}>
-              <path className="tm-b" style={{ "--d": `${0.35 + b.i * 0.14}s` }}
-                d={taperPath(b.ax, b.ay, b.cx2, b.cy2, b.ex, b.ey, 13, 4)} fill="url(#tm-bark)" />
-              <g className="tm-fol" style={{ "--d": `${0.6 + b.i * 0.14}s` }} onClick={() => onPick(b.i)}>
-                {FOL_BLOBS.map(([ox, oy, r], fi) => (
-                  <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
-                ))}
-                <circle cx={b.ex - 9} cy={b.ey - 15} r="5.5" fill="#B9DA98" opacity=".9" />
-                <circle cx={b.ex + 10} cy={b.ey - 5} r="4" fill="#B9DA98" opacity=".7" />
-                <rect x={px} y={b.ey + 24} width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
-                <text x={px + wpx / 2} y={b.ey + 47} textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>{label}</text>
-              </g>
+            <g key={"f" + b.i} className="tm-fol" style={{ "--d": `${0.65 + b.i * 0.13}s` }} onClick={() => onPick(b.i)}>
+              {FOL_BLOBS.map(([ox, oy, r], fi) => (
+                <circle key={fi} cx={b.ex + ox} cy={b.ey + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
+              ))}
+              <circle cx={b.ex - 9} cy={b.ey - 15} r="5.5" fill="#B9DA98" opacity=".9" />
+              <circle cx={b.ex + 10} cy={b.ey - 5} r="4" fill="#B9DA98" opacity=".7" />
+              <rect x={px} y={ry} width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
+              <text x={px + wpx / 2} y={ry + 23} textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>{label}</text>
             </g>
           );
         })}
       </g>
 
-      <image href="/kame-walk.png" x="252" y="252" width="76" height="76" className="tmap-kame" />
+      <image href="/kame-walk.png" x="256" y="254" width="72" height="72" className="tmap-kame" />
     </svg>
   );
 }
