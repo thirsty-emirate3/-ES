@@ -689,3 +689,18 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
   .tmap-node{animation:none; opacity:1;}
   .tmap-sway,.tmap-kame{animation:none;}
 }
+
+/* ---- 木 v2 ---- */
+.tmap{max-width:460px;}
+.tm-grow{opacity:0; animation:tmGrow .55s ease forwards .05s;}
+@keyframes tmGrow{from{opacity:0; transform:translateY(10px);}to{opacity:1; transform:none;}}
+.tm-b{opacity:0; animation:tmGrow .5s ease forwards; animation-delay:var(--d);}
+.tm-fol{opacity:0; animation:medPop .45s cubic-bezier(.34,1.56,.64,1) forwards; animation-delay:var(--d);
+  cursor:pointer; transform-box:fill-box; transform-origin:center;}
+.tm-fol:active{transform:scale(.97);}
+.tm-twig{animation:twigGrow .4s cubic-bezier(.34,1.56,.64,1) both; cursor:pointer;}
+@keyframes twigGrow{from{opacity:0; transform:scale(.1);}to{opacity:1; transform:scale(1);}}
+.tm-qt{font-family:'Zen Maru Gothic',sans-serif; font-size:9px; font-weight:900; fill:#fff; pointer-events:none;}
+@media(prefers-reduced-motion:reduce){
+  .tm-grow,.tm-b,.tm-fol,.tm-twig{animation:none; opacity:1; transform:none;}
+}
