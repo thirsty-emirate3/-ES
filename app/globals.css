@@ -753,3 +753,12 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .lad-q.sub p{font-size:13px; font-weight:700;}
 .lad-q.lv2.sub{margin-left:16px;}
 .lad-q.lv3.sub{margin-left:32px;}
+
+/* ---- 一文要約と30秒回答を白背景に ---- */
+.tr-ikkabun{background:#fff; border-left:4px solid var(--matcha); border-radius:6px 18px 18px 6px;
+  padding:18px 20px; font-size:15.5px; font-weight:700; line-height:2.05; color:var(--ink);
+  box-shadow:0 1px 3px rgba(69,55,35,.06), 0 14px 32px -24px rgba(69,55,35,.3);}
+.sh-paper, .sh-paper.after{background:#fff; background-image:none; border:1.5px solid var(--hairline);
+  border-radius:18px; padding:18px 20px;
+  box-shadow:0 1px 3px rgba(69,55,35,.06), 0 14px 32px -24px rgba(69,55,35,.3);}
+.sh-paper p{font-size:15px; font-weight:500; line-height:2.05; color:var(--ink); padding:0;}
