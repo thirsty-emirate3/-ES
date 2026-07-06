@@ -48,10 +48,10 @@ ${body}`;
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   try {
-    // ① 幹: 一文要約 + 30秒回答 + キーワード
+    // 幹と枝を1回で生成(タイムアウト対策: 枝は4本×3問、回答は簡潔に)
     const r1 = await anthropic.messages.create({
       model: "claude-sonnet-4-5",
-      max_tokens: 1500,
+      max_tokens: 2800,
       temperature: 0.3,
       messages: [{
         role: "user",
@@ -59,34 +59,12 @@ ${body}`;
 
 ${info}
 
-このESから以下を作成し、JSONのみを出力(前置き・コードブロック禁止):
-{"ikkabun":"一文要約。環境/課題/自分の行動/結果の4要素を1文に(面接官に最初に渡す地図)","kaito30":"30秒回答。サンドイッチ構成(結論→背景と課題→施策や要素を2つ→結果)。話し言葉で、書き言葉にしない。250字前後","keywords":["30秒回答に埋め込まれた、面接官が深掘りしたくなるキーワードを4〜5個。短い名詞句で"]}`,
+このESから面接用の幹枝シートを作成し、JSONのみを出力(前置き・コードブロック禁止):
+{"ikkabun":"一文要約。環境/課題/自分の行動/結果の4要素を1文に","kaito30":"30秒回答。サンドイッチ構成(結論→背景と課題→施策2つ→結果)。話し言葉で250字前後","miki":[{"kw":"深掘りキーワード","eda":[{"q":"面接官の質問","a":"回答例。話し言葉で2文以内。ESにない部分は『ここは自分の言葉で足してね: 〜』とヒントにする","why":["最重要の質問のみ、さらに深掘りされた場合の返しを1つ"]}]}]}
+制約: mikiは4本。各枝のedaは3問。whyは各枝で最重要の1問だけに付け、他は空配列[]。`,
       }],
     });
-    const trunk = parse(r1);
-
-    // ② 枝: キーワードごとの想定質問と回答例
-    const r2 = await anthropic.messages.create({
-      model: "claude-sonnet-4-5",
-      max_tokens: 3500,
-      temperature: 0.3,
-      messages: [{
-        role: "user",
-        content: `${RULES}
-
-${info}
-
-このESの深掘りキーワード: ${JSON.stringify(trunk.keywords)}
-
-各キーワードについて、面接官がしそうな質問を3つずつ作り、ESの内容に基づく回答例を付ける。回答例は話し言葉で2〜3文。ESに書かれていない部分は「ここは自分の言葉で足してね: 〜」の形でヒントにする。特に重要な質問には、さらに深掘りされた場合のWhyの重ね方を1〜2段付ける。
-JSONのみを出力(前置き・コードブロック禁止):
-{"miki":[{"kw":"キーワード","eda":[{"q":"面接官の質問","a":"回答例","why":["さらに『なぜ?』と聞かれたら: ..."]}]}]}
-whyは重要な質問のみ(なければ空配列)。`,
-      }],
-    });
-    const branches = parse(r2);
-
-    const result = { ...trunk, ...branches };
+    const result = parse(r1);
 
     if (!isAdmin) {
       await admin.from("profiles")

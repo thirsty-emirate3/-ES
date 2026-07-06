@@ -545,7 +545,9 @@ export default function Home() {
           tags: pl.tags,
         }),
       });
-      const data = await res.json();
+      let data;
+      try { data = await res.json(); }
+      catch (_) { throw new Error("サーバーが混み合ってるみたい。もう一度押すと成功することが多いよ"); }
       if (res.status === 402 || data.error === "no_credits") { setNeedPay(true); return; }
       if (!res.ok) throw new Error(data.error || "エラーが発生しました");
       setOut({
@@ -573,7 +575,9 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ qtype: iQtype, question: iQuestion, body: iBody }),
       });
-      const data = await res.json();
+      let data;
+      try { data = await res.json(); }
+      catch (_) { throw new Error("サーバーが混み合ってるみたい。もう一度押すと成功することが多いよ"); }
       if (res.status === 402 || data.error === "no_credits") { setINeedPay(true); return; }
       if (!res.ok) throw new Error(data.error || "エラーが発生しました");
       setIOut({ ...data, qtype: iQtype, date: new Date().toLocaleDateString("ja-JP") });
