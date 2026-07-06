@@ -738,3 +738,10 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
 .lad-q.lv3 em{color:var(--shu);}
 .lad-q.lv3 p{color:#7A2C23;}
 .lad-arrow{font-size:11px; font-weight:900; color:#B9AD90; padding:4px 0 4px 20px;}
+
+/* ---- 樹冠(共通質問)と質問カード ---- */
+.tm-crown.clickable{cursor:pointer;}
+.tm-crown.clickable:active{transform:scale(.98);}
+.lad-q.q{background:#fff; box-shadow:0 1px 3px rgba(69,55,35,.06);}
+.lad-q.q em{color:var(--matcha-deep);}
+.lad-q.q p{font-weight:700;}

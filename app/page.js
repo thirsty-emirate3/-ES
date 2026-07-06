@@ -154,13 +154,13 @@ const FOL_BLOBS = [
 ];
 
 // 幹の中心線(下から上へ)と、その途中から生える枝の定義
-const TRUNK = { x0: 210, y0: 328, cx: 203, cy: 242, x1: 215, y1: 146, w0: 34, w1: 13 };
+const TRUNK = { x0: 210, y0: 328, cx: 203, cy: 240, x1: 214, y1: 122, w0: 34, w1: 12 };
 const BRANCH_DEFS = [
   { t: 0.28, ex: 362, ey: 246, labelPos: "above" },
   { t: 0.42, ex: 58,  ey: 228, labelPos: "above" },
   { t: 0.60, ex: 356, ey: 102, labelPos: "below" },
   { t: 0.74, ex: 70,  ey: 82,  labelPos: "below" },
-  { t: 0.87, ex: 292, ey: 40,  labelPos: "below" },
+  { t: 0.86, ex: 330, ey: 44,  labelPos: "below" },
 ];
 const trunkPt = (t) => {
   const mt = 1 - t;
@@ -174,7 +174,7 @@ const trunkPt = (t) => {
 function TreeMap({ miki, openKw, onPick }) {
   const n = Math.min((miki || []).length, 5);
   if (!n) return null;
-  const branches = miki.slice(0, n).map((m, i) => {
+  const branches = miki.slice(0, Math.min(n, 5)).map((m, i) => {
     const def = BRANCH_DEFS[i];
     const at = trunkPt(def.t);
     const cxq = at.x + (def.ex - at.x) * 0.42;
@@ -236,14 +236,37 @@ function TreeMap({ miki, openKw, onPick }) {
           <path d="M 202 310 C 200 264 203 216 208 172" fill="none" stroke="#A78458" strokeWidth="2.5" strokeLinecap="round" opacity=".55" />
         </g>
 
-        {/* ③ 樹冠(幹の先端を包む) */}
-        <g className="tm-fol tm-crown" style={{ "--d": ".55s" }}>
-          {[[-28, -6, 21], [22, -11, 19], [-3, -27, 20], [-14, 9, 16], [26, 7, 15], [5, -9, 18], [-20, -18, 14], [14, -22, 14], [0, 6, 16]].map(([ox, oy, r], fi) => (
-            <circle key={fi} cx={215 + ox} cy={140 + oy} r={r} fill={FOL[fi % 3]} />
-          ))}
-          <circle cx="203" cy="120" r="6" fill="#B9DA98" opacity=".9" />
-          <circle cx="229" cy="134" r="4.5" fill="#B9DA98" opacity=".7" />
-        </g>
+        {/* ③ 樹冠 = 6本目「共通質問」の大きなカノピー */}
+        {(() => {
+          const uni = (miki || [])[5];
+          const on = openKw.has(5);
+          const CROWN = [
+            [-46, 2, 24], [46, 4, 23], [-26, -20, 25], [28, -18, 24],
+            [0, -32, 26], [-8, 6, 24], [16, 8, 22], [-40, -14, 18],
+            [40, -12, 18], [8, -26, 22], [-18, 12, 19], [26, -30, 16],
+          ];
+          return (
+            <g className={"tm-fol tm-crown" + (uni ? " clickable" : "")} style={{ "--d": ".55s" }}
+              onClick={uni ? () => onPick(5) : undefined}>
+              {CROWN.map(([ox, oy, r], fi) => (
+                <circle key={fi} cx={213 + ox} cy={118 + oy} r={r + (on ? 2 : 0)} fill={FOL[fi % 3]} />
+              ))}
+              <circle cx="192" cy="86" r="7" fill="#B9DA98" opacity=".9" />
+              <circle cx="238" cy="102" r="5" fill="#B9DA98" opacity=".75" />
+              <circle cx="172" cy="112" r="4.5" fill="#B9DA98" opacity=".6" />
+              {uni && (() => {
+                const wpx = 4 * 14.5 + 30;
+                const px = 213 - wpx / 2;
+                return (
+                  <g>
+                    <rect x={px} y="42" width={wpx} height="34" rx="17" className={"tmap-pill" + (on ? " on" : "")} />
+                    <text x="213" y="65" textAnchor="middle" className={"tmap-label" + (on ? " on" : "")}>共通質問</text>
+                  </g>
+                );
+              })()}
+            </g>
+          );
+        })()}
 
         {/* ④ 葉ふさとラベル */}
         {branches.map((b) => {
@@ -370,15 +393,26 @@ function InterviewView({ data }) {
               </button>
               {openKw.has(mi) && (
                 <div className="lad">
-                  {(m.chain || (m.eda || []).map((e) => e.q)).map((q, qi) => (
-                    <div key={qi}>
-                      <div className={"lad-q lv" + (qi + 1)}>
-                        <em>{qi === 0 ? "まず聞かれる" : qi === 1 ? "なぜ?で掘られる" : "さらに深く"}</em>
-                        <p>{q}</p>
-                      </div>
-                      {qi < 2 && <div className="lad-arrow">↓ あなたの答えに対して</div>}
+                  {(m.qs || m.chain || (m.eda || []).map((e) => e.q)).map((q, qi) => (
+                    <div className="lad-q q" key={"q" + qi}>
+                      <em>Q{qi + 1}</em>
+                      <p>{q}</p>
                     </div>
                   ))}
+                  {(m.whys || []).length > 0 && (
+                    <>
+                      <div className="lad-arrow">↓ あなたの答えに対して、ここからWhy責め</div>
+                      {(m.whys || []).map((w, wi) => (
+                        <div key={"w" + wi}>
+                          <div className={"lad-q lv" + (wi + 2)}>
+                            <em>{wi === 0 ? "なぜ?" : "さらになぜ?"}</em>
+                            <p>{w}</p>
+                          </div>
+                          {wi === 0 && <div className="lad-arrow">↓</div>}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -1118,9 +1152,14 @@ export default function Home() {
           {(activeResult.miki || []).map((m, mi) => (
             <div key={mi} style={{ marginBottom: 10 }}>
               <div className="pr-kw">枝{mi + 1}. {m.kw}</div>
-              {(m.chain || (m.eda || []).map((e) => e.q)).map((q, ei) => (
-                <div className="pr-item" key={ei} style={{ marginLeft: 12 + ei * 14 }}>
-                  <b>{ei === 0 ? "まず: " : ei === 1 ? "なぜ?: " : "さらに: "}{q}</b>
+              {(m.qs || m.chain || (m.eda || []).map((e) => e.q)).map((q, ei) => (
+                <div className="pr-item" key={"q" + ei} style={{ marginLeft: 12 }}>
+                  <b>Q{ei + 1}. {q}</b>
+                </div>
+              ))}
+              {(m.whys || []).map((w, wi) => (
+                <div className="pr-item" key={"w" + wi} style={{ marginLeft: 24 + wi * 14, color: "#B0421F" }}>
+                  <b>{wi === 0 ? "なぜ?: " : "さらに: "}{w}</b>
                 </div>
               ))}
             </div>
