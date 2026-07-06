@@ -661,3 +661,31 @@ body{font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:va
   .pr-kw{font-size:12.5px; font-weight:900; color:#5E8F4E; background:#EAF3E2; display:inline-block;
     border-radius:999px; padding:3px 13px; margin:8px 0 4px; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
 }
+
+/* ---- 幹枝の木マップ ---- */
+.tmap{width:100%; max-width:420px; display:block; margin:2px auto 14px;}
+.tmap-trunk{fill:none; stroke:#8B6B4A; stroke-width:14; stroke-linecap:round;
+  stroke-dasharray:320; stroke-dashoffset:320; animation:medDraw .7s ease forwards .08s;}
+.tmap-trunk.thin{stroke-width:6; opacity:.5;}
+.tmap-branch{fill:none; stroke:var(--matcha); stroke-width:5; stroke-linecap:round;
+  stroke-dasharray:280; stroke-dashoffset:280; animation:medDraw .6s ease forwards; animation-delay:var(--d);}
+.tmap-node{opacity:0; animation:medPop .4s ease forwards; animation-delay:var(--d);
+  cursor:pointer; transform-box:fill-box; transform-origin:center;}
+.tmap-node:active{transform:scale(.96);}
+.tmap-leaf{fill:var(--matcha); stroke:#FFFCF2; stroke-width:3; transition:all .2s;}
+.tmap-leaf.on{fill:var(--matcha-deep);}
+.tmap-leaf2{fill:#A5CB91;}
+.tmap-pill{fill:#fff; stroke:#EFE8D4; stroke-width:1.5;
+  filter:drop-shadow(0 2px 3px rgba(69,55,35,.12)); transition:all .2s;}
+.tmap-pill.on{fill:var(--matcha-deep); stroke:var(--matcha-deep);}
+.tmap-label{font-family:'Zen Maru Gothic',sans-serif; font-size:12px; font-weight:900; fill:var(--ink); pointer-events:none;}
+.tmap-label.on{fill:#fff;}
+.tmap-sway{transform-origin:112px 168px; animation:tsway 5.5s ease-in-out infinite;}
+@keyframes tsway{0%,100%{transform:rotate(-.7deg);}50%{transform:rotate(.8deg);}}
+.tmap-kame{animation:tkame 2.4s ease-in-out infinite;}
+@keyframes tkame{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+@media(prefers-reduced-motion:reduce){
+  .tmap-trunk,.tmap-branch{animation:none; stroke-dashoffset:0;}
+  .tmap-node{animation:none; opacity:1;}
+  .tmap-sway,.tmap-kame{animation:none;}
+}

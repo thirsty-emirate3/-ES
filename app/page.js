@@ -127,6 +127,51 @@ function MikiEdaDiagram() {
   );
 }
 
+/* ---- 幹枝の木(タップできる目次) ---- */
+function TreeMap({ miki, openKw, onPick }) {
+  const n = Math.min((miki || []).length, 5);
+  if (!n) return null;
+  const cx = 112, cy = 168;
+  const start = -Math.PI * 0.46, spread = Math.PI * 0.58;
+  const nodes = miki.slice(0, n).map((m, i) => {
+    const a = start + (n === 1 ? spread / 2 : (spread * i) / (n - 1));
+    const r = 128 + (i % 2) * 18;
+    const ex = cx + Math.cos(a) * r * 1.4;
+    const ey = cy + Math.sin(a) * r;
+    const mx = cx + Math.cos(a) * r * 0.55, my = cy + Math.sin(a) * r * 0.5;
+    return { m, ex, ey, c1x: mx - Math.sin(a) * 24, c1y: my + Math.cos(a) * 24 };
+  });
+  return (
+    <svg viewBox="0 0 372 306" className="tmap" aria-label="深掘りの枝分かれマップ">
+      <ellipse cx="96" cy="276" rx="74" ry="12" fill="#EDE4C8" />
+      <path className="tmap-trunk" d="M80 280 C 86 242, 98 212, 112 168" />
+      <path className="tmap-trunk thin" d="M94 280 C 98 250, 106 218, 118 178" />
+      <g className="tmap-sway">
+        {nodes.map((nd, i) => (
+          <path key={"b" + i} className="tmap-branch" style={{ "--d": `${0.45 + i * 0.16}s` }}
+            d={`M112 168 Q ${nd.c1x} ${nd.c1y} ${nd.ex} ${nd.ey}`} />
+        ))}
+        {nodes.map((nd, i) => {
+          const open = openKw.has(i);
+          const label = nd.m.kw.length > 8 ? nd.m.kw.slice(0, 8) + "…" : nd.m.kw;
+          const wpx = label.length * 12 + 24;
+          const px = Math.min(Math.max(nd.ex - wpx / 2, 6), 366 - wpx);
+          return (
+            <g key={"n" + i} className="tmap-node" style={{ "--d": `${0.68 + i * 0.16}s` }} onClick={() => onPick(i)}>
+              <circle cx={nd.ex - 8} cy={nd.ey - 7} r="8" className="tmap-leaf2" />
+              <circle cx={nd.ex + 6} cy={nd.ey - 9} r="6.5" className="tmap-leaf2" />
+              <circle cx={nd.ex} cy={nd.ey} r={open ? 13 : 10.5} className={"tmap-leaf" + (open ? " on" : "")} />
+              <rect x={px} y={nd.ey + 15} width={wpx} height="27" rx="13.5" className={"tmap-pill" + (open ? " on" : "")} />
+              <text x={px + wpx / 2} y={nd.ey + 33} textAnchor="middle" className={"tmap-label" + (open ? " on" : "")}>{label}</text>
+            </g>
+          );
+        })}
+      </g>
+      <image href="/kame-walk.png" x="14" y="240" width="54" height="54" className="tmap-kame" />
+    </svg>
+  );
+}
+
 /* ---- スコアの円形ゲージ ---- */
 function ScoreRing({ value }) {
   const r = 19, c = 2 * Math.PI * r;
@@ -170,6 +215,12 @@ function InterviewView({ data }) {
     next.has(key) ? next.delete(key) : next.add(key);
     setFn(next);
   };
+  const pick = (i) => {
+    toggle(openKw, setOpenKw, i);
+    if (!openKw.has(i)) {
+      setTimeout(() => document.getElementById("branch-" + i)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+    }
+  };
   const copy = async (text, key) => {
     try { await navigator.clipboard.writeText(text); }
     catch (_) {
@@ -206,10 +257,11 @@ function InterviewView({ data }) {
 
       <div className="sh-sheet">
         <h3 className="sh-h2"><em>MIKIEDA 03</em>深掘りの枝分かれ</h3>
-        <p className="tr-hint" style={{ marginBottom: 14 }}>キーワードをタップすると、面接官の想定質問と答え方がひらくよ</p>
+        <TreeMap miki={data.miki} openKw={openKw} onPick={pick} />
+        <p className="tr-hint" style={{ marginBottom: 14 }}>木のふさをタップすると、その枝の想定問答がひらくよ</p>
         <div className="tree">
           {(data.miki || []).map((m, mi) => (
-            <div className="tr-branch" key={mi}>
+            <div className="tr-branch" key={mi} id={"branch-" + mi}>
               <button className={"tr-kw" + (openKw.has(mi) ? " open" : "")} onClick={() => toggle(openKw, setOpenKw, mi)}>
                 <span className="tr-kw-idx">{mi + 1}</span>
                 <span className="tr-kw-t">{m.kw}</span>
